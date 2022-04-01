@@ -1,0 +1,18 @@
+name: Bedwars
+version: '${project.version}'
+main: xyz.lotho.me.bedwars.Bedwars
+api-version: 1.18
+authors: [ Lotho, markxhewson ]
+description: A bedwars plugin.
+
+commands:
+  kaboom:
+    description: 'Kaboom!'
+    permission: 'bedwars.admin'
+  nick:
+    description: 'Disguises you as another person.'
+    permission: 'bedwars.admin'
+  startgame:
+    description: 'Automatically start a game of bedwars.'
+    permission: 'bedwars.admin'
+    aliases: [begin]
