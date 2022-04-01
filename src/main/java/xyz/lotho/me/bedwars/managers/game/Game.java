@@ -47,7 +47,7 @@ public class Game {
     private final TeamManager teamManager;
 
     private boolean started = false;
-    private int lobbyTime = 20;
+    private int lobbyTime = 10;
     private int elapsedTime = 0;
 
     private final ArrayList<Generator> generators = new ArrayList<>();
@@ -133,7 +133,7 @@ public class Game {
 
     public void handleTeamSetup() {
         Arrays.stream(PlayerTeam.values()).forEach(team -> {
-            this.getTeamManager().addTeam(team.toString(), team.getTeamColor());
+            this.getTeamManager().addTeam(team.toString(), team.getTeamColor(), team.getArmorColor());
         });
     }
 

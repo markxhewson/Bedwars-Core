@@ -1,6 +1,7 @@
 package xyz.lotho.me.bedwars.managers.teams;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 
@@ -22,8 +23,8 @@ public class TeamManager {
         return this.teamsMap;
     }
 
-    public void addTeam(String teamName, ChatColor teamColor) {
-        this.getTeamsMap().put(teamName, new Team(this.instance, this.game, teamName, teamColor));
+    public void addTeam(String teamName, ChatColor teamColor, Color armorColor) {
+        this.getTeamsMap().put(teamName, new Team(this.instance, this.game, teamName, teamColor, armorColor));
     }
 
     public Team getTeam(String name) {

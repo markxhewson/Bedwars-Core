@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import xyz.lotho.me.bedwars.command.KaboomCommand;
 import xyz.lotho.me.bedwars.command.NickCommand;
 import xyz.lotho.me.bedwars.command.StartGameCommand;
+import xyz.lotho.me.bedwars.listeners.BlockBreakListener;
 import xyz.lotho.me.bedwars.listeners.InventoryClickListener;
 import xyz.lotho.me.bedwars.listeners.PlayerInteractListener;
 import xyz.lotho.me.bedwars.managers.disguise.DisguiseManager;
@@ -57,7 +58,8 @@ public final class Bedwars extends JavaPlugin {
     public void initListeners() {
         Arrays.asList(
                 new PlayerInteractListener(this),
-                new InventoryClickListener(this)
+                new InventoryClickListener(this),
+                new BlockBreakListener(this)
         ).forEach(listener -> this.getServer().getPluginManager().registerEvents(listener, this));
     }
 

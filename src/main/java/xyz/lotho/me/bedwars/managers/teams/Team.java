@@ -1,9 +1,6 @@
 package xyz.lotho.me.bedwars.managers.teams;
 
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import xyz.lotho.me.bedwars.Bedwars;
@@ -20,26 +17,23 @@ public class Team {
 
     private final String teamName;
     private final ChatColor teamColor;
+    private final Color armorColor;
 
     private Location spawnLocation;
     private ArrayList<GamePlayer> teamMembers = new ArrayList<>();
 
-    public Team(Bedwars instance, Game game, String teamName, ChatColor teamColor) {
+    private final int maxTeamSize = 1;
+
+    public Team(Bedwars instance, Game game, String teamName, ChatColor teamColor, Color armorColor) {
         this.instance = instance;
         this.game = game;
         this.teamName = teamName;
         this.teamColor = teamColor;
+        this.armorColor = armorColor;
     }
 
     public void loadTeam() {
-        this.getTeamMembers().forEach(gamePlayer -> {
-            Player player = this.instance.getServer().getPlayer(gamePlayer.getUuid());
-            player.getInventory().clear();
-            player.teleport(this.getSpawnLocation());
-            player.setGameMode(GameMode.SURVIVAL);
-
-            player.getInventory().setItem(0, new ItemBuilder(new ItemStack(Material.WOOD_SWORD)).getItem());
-        });
+        this.getTeamMembers().forEach(GamePlayer::spawn);
     }
 
     public Game getGame() {
@@ -52,6 +46,10 @@ public class Team {
 
     public ChatColor getTeamColor() {
         return teamColor;
+    }
+
+    public Color getArmorColor() {
+        return this.armorColor;
     }
 
     public Location getSpawnLocation() {
@@ -73,5 +71,9 @@ public class Team {
 
     public ArrayList<GamePlayer> getTeamMembers() {
         return teamMembers;
+    }
+
+    public int getMaxTeamSize() {
+        return maxTeamSize;
     }
 }

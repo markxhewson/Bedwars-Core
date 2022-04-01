@@ -42,10 +42,10 @@ public class PickTeamMenu extends Menu {
 
         this.game.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
             this.getInventory().setItem(startingIndex.getAndIncrement(),
-                    new ItemBuilder(new ItemStack(Material.ANVIL))
+                    new ItemBuilder(Material.ANVIL)
                             .setDisplayName(team.getTeamColor() + teamName)
-                            .setLore(Collections.singletonList(Chat.color("&7Players: " + team.getTeamMembers().size() + "/1")))
-                            .getItem()
+                            .setLore("&7Players: " + team.getTeamMembers().size() + "/1")
+                            .build()
             );
         });
     }
@@ -59,7 +59,7 @@ public class PickTeamMenu extends Menu {
 
         Team team = game.getTeamManager().getTeam(teamName);
 
-        if (team.getTeamMembers().size() >= 1) {
+        if (team.getTeamMembers().size() >= team.getMaxTeamSize()) {
             player.sendMessage(Chat.color("&cThis team is full!"));
             return;
         }

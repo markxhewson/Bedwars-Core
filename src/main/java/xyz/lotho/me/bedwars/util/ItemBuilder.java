@@ -1,18 +1,21 @@
 package xyz.lotho.me.bedwars.util;
 
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ItemBuilder {
     private ItemStack item;
 
-    public ItemBuilder(ItemStack itemstack) {
-        this.item = itemstack;
+    public ItemBuilder(Material material) {
+        this.item = new ItemStack(material);
     }
 
     public ItemBuilder addAllItemFlags() {
@@ -25,31 +28,44 @@ public class ItemBuilder {
         meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
         this.item.setItemMeta(meta);
 
-        return new ItemBuilder(this.item);
+        return this;
     }
 
     public ItemBuilder setDisplayName(String name) {
         ItemMeta meta = this.item.getItemMeta();
         meta.setDisplayName(name);
         this.item.setItemMeta(meta);
-        return new ItemBuilder(this.item);
+        return this;
     }
 
-    public ItemBuilder setLore(List<String> lore) {
+    public ItemBuilder setArmorColor(Color color) {
+        LeatherArmorMeta leatherArmorMeta = (LeatherArmorMeta) this.item.getItemMeta();
+        leatherArmorMeta.setColor(color);
+        this.item.setItemMeta(leatherArmorMeta);
+        return this;
+    }
+
+    public ItemBuilder setLore(String... lines) {
         ItemMeta meta = this.item.getItemMeta();
+        List<String> lore = new ArrayList<>();
+
+        for (String line : lines) {
+            lore.add(Chat.color(line));
+        }
+
         meta.setLore(lore);
         this.item.setItemMeta(meta);
-        return new ItemBuilder(this.item);
+        return this;
     }
 
     public ItemBuilder addItemFlag(ItemFlag flag) {
         ItemMeta meta = this.item.getItemMeta();
         meta.addItemFlags(flag);
         this.item.setItemMeta(meta);
-        return new ItemBuilder(this.item);
+        return this;
     }
 
-    public ItemStack getItem() {
+    public ItemStack build() {
         return this.item;
     }
 
@@ -62,14 +78,14 @@ public class ItemBuilder {
         }
 
         this.item.setItemMeta(meta);
-        return new ItemBuilder(this.item);
+        return this;
     }
 
     public ItemBuilder addUnsafeEnchant(Enchantment ench, int level) {
         ItemMeta meta = this.item.getItemMeta();
         meta.addEnchant(ench, level, true);
         this.item.setItemMeta(meta);
-        return new ItemBuilder(this.item);
+        return this;
     }
 
     public static boolean hasItemName(String name, ItemStack item) {
