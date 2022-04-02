@@ -2,7 +2,7 @@ package xyz.lotho.me.bedwars.managers.player;
 
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
-import xyz.lotho.me.bedwars.managers.teams.Team;
+import xyz.lotho.me.bedwars.managers.team.Team;
 
 import java.util.HashMap;
 import java.util.Map;

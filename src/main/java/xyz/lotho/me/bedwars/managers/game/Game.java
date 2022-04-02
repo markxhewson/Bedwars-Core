@@ -1,5 +1,6 @@
 package xyz.lotho.me.bedwars.managers.game;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import com.sk89q.worldedit.*;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.data.DataException;
@@ -15,23 +16,25 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.generators.Generator;
 import xyz.lotho.me.bedwars.generators.GeneratorType;
+import xyz.lotho.me.bedwars.managers.block.BlockManager;
 import xyz.lotho.me.bedwars.managers.player.GamePlayer;
 import xyz.lotho.me.bedwars.managers.player.GamePlayerManager;
-import xyz.lotho.me.bedwars.managers.teams.PlayerTeam;
-import xyz.lotho.me.bedwars.managers.teams.Team;
-import xyz.lotho.me.bedwars.managers.teams.TeamManager;
+import xyz.lotho.me.bedwars.managers.team.PlayerTeam;
+import xyz.lotho.me.bedwars.managers.team.Team;
+import xyz.lotho.me.bedwars.managers.team.TeamManager;
+import xyz.lotho.me.bedwars.ui.PickTeamMenu;
 import xyz.lotho.me.bedwars.util.Chat;
+import xyz.lotho.me.bedwars.util.ItemBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Game {
 
@@ -45,13 +48,16 @@ public class Game {
 
     private final GamePlayerManager gamePlayerManager;
     private final TeamManager teamManager;
+    private final BlockManager blockManager;
+
+    private final PickTeamMenu pickTeamMenu;
 
     private boolean started = false;
     private int lobbyTime = 10;
     private int elapsedTime = 0;
 
     private final ArrayList<Generator> generators = new ArrayList<>();
-    private final ArrayList<GamePlayer> gamePlayers = new ArrayList<>();
+    private final ArrayList<GamePlayer> players = new ArrayList<>();
 
     public Game(Bedwars instance, World world, Location center) {
         this.instance = instance;
@@ -59,10 +65,12 @@ public class Game {
         this.center = center;
         this.gamePlayerManager = new GamePlayerManager(this.instance, this);
         this.teamManager = new TeamManager(this.instance, this);
+        this.blockManager = new BlockManager(this.instance, this);
+        this.pickTeamMenu = new PickTeamMenu(this.instance, this);
     }
 
-    public World getGameWorld() {
-        return this.getWorld();
+    public BlockManager getBlockManager() {
+        return this.blockManager;
     }
 
     public ArrayList<Generator> getGenerators() {
@@ -86,12 +94,30 @@ public class Game {
             case PLAYING:
                 this.getGenerators().forEach(Generator::spawnMaterials);
 
-                this.elapsedTime++;
+                this.setElapsedTime(this.getElapsedTime() + 1);
                 break;
 
             case ENDED:
                 break;
         }
+    }
+
+    public Team getNearestBed(Location location) {
+        AtomicDouble check = new AtomicDouble(0);
+        AtomicReference<Team> nearestTeam = new AtomicReference<>();
+
+        this.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
+            double locationDiff = location.distance(team.getSpawnLocation());
+
+            if (check.get() == 0) check.set(locationDiff);
+
+            if (locationDiff <= check.get()) {
+                check.set(locationDiff);
+                nearestTeam.set(team);
+            }
+        });
+
+        return nearestTeam.get();
     }
 
     public void loadGame() throws IOException, DataException, MaxChangedBlocksException {
@@ -112,7 +138,7 @@ public class Game {
                 this.getGamePlayerManager().addPlayer(player.getUniqueId());
 
                 GamePlayer gamePlayer = this.getGamePlayerManager().getPlayer(player.getUniqueId());
-                this.gamePlayers.add(gamePlayer);
+                this.players.add(gamePlayer);
             });
 
             this.setupLobbyPlayers();
@@ -126,7 +152,12 @@ public class Game {
             if (player == null) return;
 
             player.getInventory().clear();
-            player.getInventory().setItem(4, new ItemStack(Material.NOTE_BLOCK, 1));
+            player.getInventory().setHelmet(null);
+            player.getInventory().setChestplate(null);
+            player.getInventory().setLeggings(null);
+            player.getInventory().setBoots(null);
+
+            player.getInventory().setItem(4, new ItemBuilder(Material.NOTE_BLOCK).setDisplayName("&aChoose Team").build());
             player.setGameMode(GameMode.ADVENTURE);
         });
     }
@@ -287,6 +318,18 @@ public class Game {
     }
 
     public ArrayList<GamePlayer> getGamePlayers() {
-        return this.gamePlayers;
+        return this.players;
+    }
+
+    public int getElapsedTime() {
+        return elapsedTime;
+    }
+
+    public void setElapsedTime(int elapsedTime) {
+        this.elapsedTime = elapsedTime;
+    }
+
+    public PickTeamMenu getPickTeamMenu() {
+        return pickTeamMenu;
     }
 }

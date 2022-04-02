@@ -1,5 +1,6 @@
 package xyz.lotho.me.bedwars;
 
+import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
@@ -7,9 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import xyz.lotho.me.bedwars.command.KaboomCommand;
 import xyz.lotho.me.bedwars.command.NickCommand;
 import xyz.lotho.me.bedwars.command.StartGameCommand;
-import xyz.lotho.me.bedwars.listeners.BlockBreakListener;
-import xyz.lotho.me.bedwars.listeners.InventoryClickListener;
-import xyz.lotho.me.bedwars.listeners.PlayerInteractListener;
+import xyz.lotho.me.bedwars.listeners.*;
 import xyz.lotho.me.bedwars.managers.disguise.DisguiseManager;
 import xyz.lotho.me.bedwars.managers.game.GameManager;
 import xyz.lotho.me.bedwars.util.disguise.HTTPUtility;
@@ -42,6 +41,8 @@ public final class Bedwars extends JavaPlugin {
 
         this.gameWorld = this.getServer().getWorld("games");
         this.lastGame = new Location(this.gameWorld, 0, 150, 0);
+
+        this.gameWorld.setDifficulty(Difficulty.PEACEFUL);
     }
 
     @Override
@@ -59,7 +60,11 @@ public final class Bedwars extends JavaPlugin {
         Arrays.asList(
                 new PlayerInteractListener(this),
                 new InventoryClickListener(this),
-                new BlockBreakListener(this)
+                new BlockBreakListener(this),
+                new BlockPlaceListener(this),
+                new FoodLevelChangeListener(this),
+                new GameDeathListener(this),
+                new AsyncChatListener(this)
         ).forEach(listener -> this.getServer().getPluginManager().registerEvents(listener, this));
     }
 

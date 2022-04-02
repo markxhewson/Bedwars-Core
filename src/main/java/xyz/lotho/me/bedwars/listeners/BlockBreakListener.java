@@ -9,9 +9,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
-import xyz.lotho.me.bedwars.managers.teams.Team;
+import xyz.lotho.me.bedwars.managers.team.Team;
+import xyz.lotho.me.bedwars.util.Chat;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class BlockBreakListener implements Listener {
@@ -24,33 +24,34 @@ public class BlockBreakListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        System.out.println("hey1");
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
         Game game = this.instance.getGameManager().findPlayerGame(player.getUniqueId());
         if (game == null) return;
 
-        System.out.println("hey2");
-
         if (block.getType() == Material.BED_BLOCK) {
-            System.out.println("hey3");
-            AtomicDouble check = new AtomicDouble(0);
-            AtomicReference<Team> nearestTeam = new AtomicReference<>();
+            event.setCancelled(true);
+            block.setType(Material.AIR, false);
 
-            game.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
-                double angle = Math.toDegrees(Math.atan2(team.getSpawnLocation().getZ() - block.getZ(), team.getSpawnLocation().getX() - block.getX()));
-                System.out.println(angle);
-                System.out.println(teamName);
-                if (angle <= check.get()) {
-                    System.out.println("aa");
-                    check.set(angle);
-                    nearestTeam.set(team);
-                }
-            });
+            Team nearestTeam = game.getNearestBed(block.getLocation());
+            Team playerTeam = game.getGamePlayerManager().getPlayerTeam(player.getUniqueId());
 
-            player.sendMessage(check.toString());
-            player.sendMessage("You broke " + nearestTeam.get().getTeamName() +"'s bed!");
+            if (nearestTeam.getTeamName().equals(playerTeam.getTeamName())) {
+                player.sendMessage(Chat.color("&cYou cannot break your own bed!"));
+                event.setCancelled(true);
+                return;
+            }
+
+            nearestTeam.breakBed(game.getGamePlayerManager().getPlayer(player.getUniqueId()));
+        } else {
+            if (!game.getBlockManager().isBlockPlayerPlaced(block)) {
+                event.setCancelled(true);
+                player.sendMessage(Chat.color("&cYou can only break blocks placed by a player."));
+                return;
+            }
+
+            game.getBlockManager().removePlayerPlacedBlock(block);
         }
     }
 }

@@ -1,12 +1,11 @@
-package xyz.lotho.me.bedwars.managers.teams;
+package xyz.lotho.me.bedwars.managers.team;
 
 import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.player.GamePlayer;
-import xyz.lotho.me.bedwars.util.ItemBuilder;
+import xyz.lotho.me.bedwars.util.Chat;
 
 import java.util.ArrayList;
 
@@ -20,9 +19,10 @@ public class Team {
     private final Color armorColor;
 
     private Location spawnLocation;
-    private ArrayList<GamePlayer> teamMembers = new ArrayList<>();
+    private final ArrayList<GamePlayer> teamMembers = new ArrayList<>();
 
     private final int maxTeamSize = 1;
+    private boolean bedBroken = false;
 
     public Team(Bedwars instance, Game game, String teamName, ChatColor teamColor, Color armorColor) {
         this.instance = instance;
@@ -34,6 +34,29 @@ public class Team {
 
     public void loadTeam() {
         this.getTeamMembers().forEach(GamePlayer::spawn);
+    }
+
+    public void breakBed(GamePlayer breaker) {
+        if (this.isBedBroken()) return;
+
+        this.setBedBroken(true);
+        Player bedBreaker = this.instance.getServer().getPlayer(breaker.getUuid());
+        Team breakerTeam = this.game.getGamePlayerManager().getPlayerTeam(breaker.getUuid());
+
+        this.game.getGamePlayerManager().getPlayerMap().forEach((uuid, gamePlayer) -> {
+            Player player = this.instance.getServer().getPlayer(gamePlayer.getUuid());
+            if (player == null) return;
+
+            player.sendMessage(Chat.color("\n&f&lBED DESTRUCTION > " + this.getTeamColor() + this.getTeamName() + " Bed &7was incinerated by " + breakerTeam.getTeamColor() + bedBreaker.getName()) + "\n ");
+        });
+    }
+
+    public boolean isBedBroken() {
+        return this.bedBroken;
+    }
+
+    public void setBedBroken(boolean bedBroken) {
+        this.bedBroken = bedBroken;
     }
 
     public Game getGame() {

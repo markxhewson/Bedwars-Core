@@ -4,9 +4,12 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.EulerAngle;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.util.Chat;
+import xyz.lotho.me.bedwars.util.ItemBuilder;
 
 public class Generator {
 
@@ -39,10 +42,10 @@ public class Generator {
             return;
         }
 
-        secondsSinceActivation = 1;
+        secondsSinceActivation = 0;
 
-        this.game.getGameWorld().dropItem(this.spawnLocation, new ItemStack(this.generatorType.getMaterialType()));
-        this.game.getGameWorld().playSound(this.spawnLocation, Sound.CHICKEN_EGG_POP, 1, 2);
+        this.game.getWorld().dropItem(this.spawnLocation, new ItemStack(this.generatorType.getMaterialType()));
+        this.game.getWorld().playSound(this.spawnLocation, Sound.CHICKEN_EGG_POP, 1, 2);
     }
 
     public double getSpawnRate() {
@@ -70,11 +73,37 @@ public class Generator {
     }
 
     private void setActive() {
-        armorStand = this.game.getGameWorld().spawn(this.spawnLocation.add(0.5, 2, 0.5), ArmorStand.class);
+        armorStand = this.game.getWorld().spawn(this.spawnLocation.add(0.5, 2, 0.5), ArmorStand.class);
         armorStand.setVisible(false);
         armorStand.setCanPickupItems(false);
         armorStand.setCustomNameVisible(false);
         armorStand.setGravity(false);
+
+        Location loc = armorStand.getLocation();
+
+        new BukkitRunnable() {
+            double radius = 2;
+            double angle = 0;
+
+            @Override
+            public void run() {
+                final double x = radius * Math.cos(angle);
+                final double z = radius * Math.sin(angle);
+                angle += Math.PI / 36;
+
+                loc.add(x, 0, z);
+                look(armorStand, loc);
+                loc.subtract(x, 0, z);
+            }
+
+        }.runTaskTimer(this.instance, 0, 0);
+    }
+
+    private void look(ArmorStand stand, Location loc) {
+        Location lookDir = loc.subtract(stand.getLocation());
+        EulerAngle poseAngle = new EulerAngle(0, -Math.atan2(lookDir.getX(), lookDir.getZ()) + Math.PI / 4, 0);
+        stand.setHeadPose(poseAngle);
+        lookDir.add(stand.getLocation());
     }
 
     private String getArmorStandName() {
@@ -85,7 +114,7 @@ public class Generator {
     private void updateArmorStand() {
         armorStand.setCustomNameVisible(true);
         armorStand.setCustomName(Chat.color(getArmorStandName()));
-        armorStand.setItemInHand(new ItemStack(this.generatorType.getDisplayMaterial()));
+        armorStand.setHelmet(new ItemBuilder(this.generatorType.getDisplayMaterial()).build());
     }
 
     public boolean isIsland() {

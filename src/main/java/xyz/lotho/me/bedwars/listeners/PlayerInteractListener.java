@@ -29,7 +29,7 @@ public class PlayerInteractListener implements Listener {
         if (game.isStarted()) return;
 
         player.sendMessage(Chat.color("&aGame found! &7Loading team menu.."));
-        new PickTeamMenu(this.instance, game).open(player);
+        game.getPickTeamMenu().open(player);
 
     }
 }

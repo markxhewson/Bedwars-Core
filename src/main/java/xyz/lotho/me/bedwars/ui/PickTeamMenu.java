@@ -8,12 +8,11 @@ import org.bukkit.inventory.ItemStack;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.player.GamePlayer;
-import xyz.lotho.me.bedwars.managers.teams.Team;
+import xyz.lotho.me.bedwars.managers.team.Team;
 import xyz.lotho.me.bedwars.ui.util.Menu;
 import xyz.lotho.me.bedwars.util.Chat;
 import xyz.lotho.me.bedwars.util.ItemBuilder;
 
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PickTeamMenu extends Menu {
@@ -33,19 +32,24 @@ public class PickTeamMenu extends Menu {
 
     @Override
     public int getSlots() {
-        return 27;
+        return 18;
     }
 
     @Override
     public void setItems() {
-        AtomicInteger startingIndex = new AtomicInteger(10);
-
+        AtomicInteger counter = new AtomicInteger(0);
         this.game.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
-            this.getInventory().setItem(startingIndex.getAndIncrement(),
-                    new ItemBuilder(Material.ANVIL)
-                            .setDisplayName(team.getTeamColor() + teamName)
-                            .setLore("&7Players: " + team.getTeamMembers().size() + "/1")
-                            .build()
+            ItemBuilder itemBuilder = new ItemBuilder(Material.ANVIL);
+            itemBuilder.setDisplayName(team.getTeamColor() + team.getTeamName());
+            itemBuilder.setLore("&7Players: " + team.getTeamMembers().size() + "/" + team.getMaxTeamSize());
+
+            for (GamePlayer gamePlayer : team.getTeamMembers()) {
+                Player teamMember = this.instance.getServer().getPlayer(gamePlayer.getUuid());
+                itemBuilder.addLore("&6- &7" + teamMember.getName());
+            }
+
+            this.getInventory().setItem(counter.getAndIncrement(),
+                    itemBuilder.build()
             );
         });
     }
@@ -55,11 +59,10 @@ public class PickTeamMenu extends Menu {
         Player player = (Player) event.getWhoClicked();
         ItemStack clickedItem = event.getCurrentItem();
 
-        String teamName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+        String selectedTeamName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+        Team selectedTeam = game.getTeamManager().getTeam(selectedTeamName);
 
-        Team team = game.getTeamManager().getTeam(teamName);
-
-        if (team.getTeamMembers().size() >= team.getMaxTeamSize()) {
+        if (selectedTeam.getTeamMembers().size() >= selectedTeam.getMaxTeamSize()) {
             player.sendMessage(Chat.color("&cThis team is full!"));
             return;
         }
@@ -71,7 +74,9 @@ public class PickTeamMenu extends Menu {
             currentTeam.removeMember(gamePlayer);
         }
 
-        team.addMember(game.getGamePlayerManager().getPlayer(player.getUniqueId()));
-        this.open(player);
+        selectedTeam.addMember(game.getGamePlayerManager().getPlayer(player.getUniqueId()));
+        player.sendMessage(Chat.color("&aYou have joined " + selectedTeam.getTeamColor() + selectedTeam.getTeamName() + " &ateam!"));
+
+        this.game.getPickTeamMenu().open(player);
     }
 }

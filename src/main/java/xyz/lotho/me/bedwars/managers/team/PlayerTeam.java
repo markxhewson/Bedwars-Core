@@ -1,4 +1,4 @@
-package xyz.lotho.me.bedwars.managers.teams;
+package xyz.lotho.me.bedwars.managers.team;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
@@ -6,7 +6,7 @@ import org.bukkit.Color;
 public enum PlayerTeam {
 
     RED(ChatColor.RED, Color.RED),
-    BLUE(ChatColor.DARK_BLUE, Color.BLUE),
+    BLUE(ChatColor.BLUE, Color.BLUE),
     GREEN(ChatColor.GREEN, Color.GREEN),
     YELLOW(ChatColor.YELLOW, Color.YELLOW),
     AQUA(ChatColor.AQUA, Color.AQUA),

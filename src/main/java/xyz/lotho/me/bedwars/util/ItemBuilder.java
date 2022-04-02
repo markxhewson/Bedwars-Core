@@ -33,8 +33,13 @@ public class ItemBuilder {
 
     public ItemBuilder setDisplayName(String name) {
         ItemMeta meta = this.item.getItemMeta();
-        meta.setDisplayName(name);
+        meta.setDisplayName(Chat.color(name));
         this.item.setItemMeta(meta);
+        return this;
+    }
+
+    public ItemBuilder setDurability(short id) {
+        this.item.setDurability(id);
         return this;
     }
 
@@ -55,6 +60,20 @@ public class ItemBuilder {
 
         meta.setLore(lore);
         this.item.setItemMeta(meta);
+        return this;
+    }
+
+    public ItemBuilder addLore(String line) {
+        ItemMeta meta = this.item.getItemMeta();
+        List<String> lore;
+
+        if (meta.getLore() == null) lore = new ArrayList<>();
+        else lore = meta.getLore();
+
+        lore.add(Chat.color(line));
+        meta.setLore(lore);
+        this.item.setItemMeta(meta);
+
         return this;
     }
 

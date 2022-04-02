@@ -1,4 +1,4 @@
-package xyz.lotho.me.bedwars.managers.teams;
+package xyz.lotho.me.bedwars.managers.team;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
