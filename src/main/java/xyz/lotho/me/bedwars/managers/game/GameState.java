@@ -2,8 +2,8 @@ package xyz.lotho.me.bedwars.managers.game;
 
 public enum GameState {
 
+    PRELOBBY,
     LOBBY,
-    STARTING,
     PLAYING,
     ENDED;
 

@@ -31,10 +31,7 @@ public class BlockBreakListener implements Listener {
         if (game == null) return;
 
         if (block.getType() == Material.BED_BLOCK) {
-            event.setCancelled(true);
-            block.setType(Material.AIR, false);
-
-            Team nearestTeam = game.getNearestBed(block.getLocation());
+            Team nearestTeam = game.getWorldManager().getNearestBed(block.getLocation());
             Team playerTeam = game.getGamePlayerManager().getPlayerTeam(player.getUniqueId());
 
             if (nearestTeam.getTeamName().equals(playerTeam.getTeamName())) {

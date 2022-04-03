@@ -79,7 +79,7 @@ public class Generator {
         armorStand.setCustomNameVisible(false);
         armorStand.setGravity(false);
 
-        Location loc = armorStand.getLocation();
+        Location location = armorStand.getLocation();
 
         new BukkitRunnable() {
             double radius = 2;
@@ -91,9 +91,9 @@ public class Generator {
                 final double z = radius * Math.sin(angle);
                 angle += Math.PI / 36;
 
-                loc.add(x, 0, z);
-                look(armorStand, loc);
-                loc.subtract(x, 0, z);
+                location.add(x, 0, z);
+                look(armorStand, location);
+                location.subtract(x, 0, z);
             }
 
         }.runTaskTimer(this.instance, 0, 0);

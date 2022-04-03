@@ -41,12 +41,19 @@ public class PickTeamMenu extends Menu {
         this.game.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
             ItemBuilder itemBuilder = new ItemBuilder(Material.ANVIL);
             itemBuilder.setDisplayName(team.getTeamColor() + team.getTeamName());
-            itemBuilder.setLore("&7Players: " + team.getTeamMembers().size() + "/" + team.getMaxTeamSize());
+            itemBuilder.setLore("&7Click to join the " + team.getTeamColor() + team.getTeamName() + " Team&7!", "", "&7Current players (" + team.getTeamMembers().size() + "/" + team.getMaxTeamSize() + "): ");
+
+            if (team.getTeamMembers().isEmpty()) {
+                itemBuilder.addLore("&cN/A");
+            }
 
             for (GamePlayer gamePlayer : team.getTeamMembers()) {
                 Player teamMember = this.instance.getServer().getPlayer(gamePlayer.getUuid());
-                itemBuilder.addLore("&6- &7" + teamMember.getName());
+                itemBuilder.addLore("&7" + teamMember.getName());
             }
+
+            itemBuilder.addLore("");
+            itemBuilder.addLore("&eClick to join!");
 
             this.getInventory().setItem(counter.getAndIncrement(),
                     itemBuilder.build()
@@ -75,7 +82,7 @@ public class PickTeamMenu extends Menu {
         }
 
         selectedTeam.addMember(game.getGamePlayerManager().getPlayer(player.getUniqueId()));
-        player.sendMessage(Chat.color("&aYou have joined " + selectedTeam.getTeamColor() + selectedTeam.getTeamName() + " &ateam!"));
+        player.sendMessage(Chat.color("&aYou joined the " + selectedTeam.getTeamColor() + selectedTeam.getTeamName() + " &ateam!"));
 
         this.game.getPickTeamMenu().open(player);
     }

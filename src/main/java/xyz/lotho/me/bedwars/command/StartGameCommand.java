@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
+import xyz.lotho.me.bedwars.managers.game.GameState;
 import xyz.lotho.me.bedwars.util.Chat;
 
 import java.io.IOException;
@@ -28,13 +29,6 @@ public class StartGameCommand implements CommandExecutor {
         this.instance.getGameManager().addGame(game);
 
         sender.sendMessage(Chat.color("&aStarting game.."));
-
-        try {
-            game.loadGame();
-        } catch (IOException | DataException | MaxChangedBlocksException e) {
-            e.printStackTrace();
-        }
-
         return true;
     }
 }
