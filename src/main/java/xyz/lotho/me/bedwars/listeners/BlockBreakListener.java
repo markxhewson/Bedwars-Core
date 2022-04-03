@@ -30,6 +30,12 @@ public class BlockBreakListener implements Listener {
         Game game = this.instance.getGameManager().findPlayerGame(player.getUniqueId());
         if (game == null) return;
 
+        if (!game.getBlockManager().isBlockWithinBounds(block)) {
+            player.sendMessage(Chat.color("&cYou are too far outside the map to do this!"));
+            event.setCancelled(true);
+            return;
+        }
+
         if (block.getType() == Material.BED_BLOCK) {
             Team nearestTeam = game.getWorldManager().getNearestBed(block.getLocation());
             Team playerTeam = game.getGamePlayerManager().getPlayerTeam(player.getUniqueId());

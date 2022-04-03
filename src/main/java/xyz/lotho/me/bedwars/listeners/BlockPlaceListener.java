@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
+import xyz.lotho.me.bedwars.util.Chat;
 
 public class BlockPlaceListener implements Listener {
 
@@ -25,7 +26,12 @@ public class BlockPlaceListener implements Listener {
         if (game == null) return;
 
         // todo: check for protected zones
-        // todo: check if in bounds of game area
+
+        if (!game.getBlockManager().isBlockWithinBounds(block)) {
+            player.sendMessage(Chat.color("&cYou are too far outside the map to do this!"));
+            event.setCancelled(true);
+            return;
+        }
 
         game.getBlockManager().addPlayerPlacedBlock(block);
     }
