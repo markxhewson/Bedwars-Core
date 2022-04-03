@@ -42,7 +42,9 @@ public class WorldManager {
         this.game.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
             double locationDiff = location.distance(team.getSpawnLocation());
 
-            if (check.get() == 0) check.set(locationDiff);
+            if (check.get() == 0) {
+                check.set(locationDiff);
+            }
 
             if (locationDiff <= check.get()) {
                 check.set(locationDiff);
