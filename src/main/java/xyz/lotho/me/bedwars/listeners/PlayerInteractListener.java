@@ -30,6 +30,5 @@ public class PlayerInteractListener implements Listener {
 
         player.sendMessage(Chat.color("&aGame found! &7Loading team menu.."));
         game.getPickTeamMenu().open(player);
-
     }
 }
