@@ -21,13 +21,14 @@ public class AsyncChatListener implements Listener {
     public void onChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
 
-        Game game = this.instance.getGameManager().findPlayerGame(player.getUniqueId());
+        Game game = this.instance.getGameManager().findGameByPlayer(player.getUniqueId());
         if (game != null) {
             Team team = game.getGamePlayerManager().getPlayerTeam(player.getUniqueId());
             if (player.isOp()) event.setFormat(Chat.color(team.getTeamColor() + "[" + team.getTeamName() + "] &c[ADMIN] " + "%s&7" + ": %s"));
             else event.setFormat(Chat.color(team.getTeamColor() + "[" + team.getTeamName() + "] &7" + "%s" + ": %s"));
         } else {
-            event.setFormat(Chat.color("&7" + "%s" + ": %s"));
+            if (player.isOp()) event.setFormat(Chat.color("&c[ADMIN] " + "%s&7" + ": %s"));
+            else event.setFormat(Chat.color("&7" + "%s" + ": %s"));
         }
     }
 }

@@ -1,6 +1,5 @@
 package xyz.lotho.me.bedwars.listeners;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -11,8 +10,6 @@ import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.team.Team;
 import xyz.lotho.me.bedwars.util.Chat;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 public class BlockBreakListener implements Listener {
 
@@ -27,7 +24,7 @@ public class BlockBreakListener implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
-        Game game = this.instance.getGameManager().findPlayerGame(player.getUniqueId());
+        Game game = this.instance.getGameManager().findGameByPlayer(player.getUniqueId());
         if (game == null) return;
 
         if (!game.getBlockManager().isBlockWithinBounds(block)) {

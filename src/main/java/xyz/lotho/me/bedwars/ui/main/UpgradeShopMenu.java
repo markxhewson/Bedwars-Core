@@ -1,4 +1,4 @@
-package xyz.lotho.me.bedwars.ui;
+package xyz.lotho.me.bedwars.ui.main;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -54,17 +54,18 @@ public class UpgradeShopMenu extends Menu {
                         team.hasSharpenedSwords() ? "&cAlready purchased!" : diamondCount < 4 ? "&cYou don't have enough Diamonds!" : "&aClick to purchase!")
                 .build()
         );
+
         inventory.setItem(11, new ItemBuilder(Material.IRON_CHESTPLATE)
                 .setDisplayName("&cReinforced Armor")
                 .setLore("&7Your team permanently gains",
                         "&7Protection on all armor pieces!",
                         "",
-                        "&7Tier 1: Protection I. &b4 Diamonds",
-                        "&7Tier 2: Protection II. &b8 Diamonds",
-                        "&7Tier 3: Protection III. &b12 Diamonds",
+                        "&7Tier 1: Protection I. &b2 Diamonds",
+                        "&7Tier 2: Protection II. &b4 Diamonds",
+                        "&7Tier 3: Protection III. &b8 Diamonds",
                         "&7Tier 4: Protection IV. &b16 Diamonds",
                         "",
-                        team.getReinforcedArmorTier() == ReinforcedArmorTier.IV ? "&cMax tier achieved!" : (diamondCount < team.getReinforcedArmorTier().getDiamondsRequired() + 4 ? "&cYou don't have enough Diamonds!" : "&aClick to purchase!"))
+                        team.getReinforcedArmorTier() == ReinforcedArmorTier.IV ? "&cMax tier achieved!" : (diamondCount < team.getReinforcedArmorTier().getNext(team.getReinforcedArmorTier()).getDiamondsRequired() ? "&cYou don't have enough Diamonds!" : "&aClick to purchase!"))
                 .build());
 
         this.fillRemainingSlots();

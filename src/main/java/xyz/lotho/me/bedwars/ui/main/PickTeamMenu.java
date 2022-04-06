@@ -1,4 +1,4 @@
-package xyz.lotho.me.bedwars.ui;
+package xyz.lotho.me.bedwars.ui.main;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -39,7 +39,9 @@ public class PickTeamMenu extends Menu {
     public void setItems() {
         AtomicInteger counter = new AtomicInteger(0);
         this.game.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
-            ItemBuilder itemBuilder = new ItemBuilder(Material.ANVIL);
+            ItemBuilder itemBuilder = new ItemBuilder(Material.WOOL);
+
+            itemBuilder.setDurability((short) team.getMetaID());
             itemBuilder.setDisplayName(team.getTeamColor() + team.getTeamName());
             itemBuilder.setLore("&7Click to join the " + team.getTeamColor() + team.getTeamName() + " Team&7!", "", "&7Current players (" + team.getTeamMembers().size() + "/" + team.getMaxTeamSize() + "): ");
 
@@ -55,7 +57,8 @@ public class PickTeamMenu extends Menu {
             itemBuilder.addLore("");
             itemBuilder.addLore("&eClick to join!");
 
-            this.getInventory().setItem(counter.getAndIncrement(),
+            this.getInventory().setItem(
+                    counter.getAndIncrement(),
                     itemBuilder.build()
             );
         });

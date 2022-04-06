@@ -6,6 +6,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -25,8 +26,14 @@ public class GamePlayer {
     private Team team;
     private final UUID uuid;
 
-    private boolean ironArmorUpgrade = true;
-    private boolean diamondArmorUpgrade = true;
+    private boolean chainArmorUpgrade = false;
+    private boolean ironArmorUpgrade = false;
+    private boolean diamondArmorUpgrade = false;
+
+    private int kills = 0;
+    private int deaths = 0;
+
+    private boolean finalKilled = false;
 
     public GamePlayer(Bedwars instance, Game game, Team team, UUID uuid) {
         this.instance = instance;
@@ -59,13 +66,13 @@ public class GamePlayer {
         this.getPlayer().getInventory().removeItem(new ItemStack(material, count));
     }
 
-    public void sendTitle(Player player, String title, String subtitle) {
+    public void sendTitle(Player player, String title, String subtitle, int time) {
         IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + Chat.color(title) + "\"}");
         IChatBaseComponent subtitleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + Chat.color(subtitle) + "\"}");
 
         PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleComponent);
         PacketPlayOutTitle subTitlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, subtitleComponent);
-        PacketPlayOutTitle length = new PacketPlayOutTitle(5, 50, 5);
+        PacketPlayOutTitle length = new PacketPlayOutTitle(5, time, 5);
 
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(titlePacket);
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(subTitlePacket);
@@ -76,16 +83,21 @@ public class GamePlayer {
         if (this.getPlayer() == null) return;
         Player killed = this.getPlayer();
 
+        this.setDeaths(this.getDeaths() + 1);
+        if (killer != null) killer.setKills(killer.getKills() + 1);
+
         killed.getInventory().clear();
         killed.setHealth(20);
         killed.setGameMode(GameMode.SPECTATOR);
         killed.teleport(game.getLobbyLocation());
 
         if (finalKill) {
-            this.sendTitle(killed, "&cYOU DIED!", "&eYou will no longer respawn!");
+            this.sendTitle(killed, "&cYOU DIED!", "&eYou will no longer respawn!", 50);
 
             if (killer == null) this.game.broadcast(team.getTeamColor() + killed.getName() + " &7died." + " &b&lFINAL KILL!");
             else this.game.broadcast(team.getTeamColor() + killed.getName() + " &7was &6bested &7by " + killer.getTeam().getTeamColor() + killer.getPlayer().getName() + "&7. &b&lFINAL KILL!");
+
+            this.setFinalKilled(true);
         }
         else {
             new BukkitRunnable() {
@@ -97,7 +109,7 @@ public class GamePlayer {
                         GamePlayer.this.spawn();
                         this.cancel();
                     } else {
-                        GamePlayer.this.sendTitle(killed, "&cYOU DIED!", "&eYou will respawn in &c" + countdown + " &eseconds!");
+                        GamePlayer.this.sendTitle(killed, "&cYOU DIED!", "&eYou will respawn in &c" + countdown + " &eseconds!", 50);
                         countdown--;
                     }
                 }
@@ -119,32 +131,48 @@ public class GamePlayer {
         player.setGameMode(GameMode.SURVIVAL);
         player.setPlayerListName(Chat.color(team.getTeamColor() + "&l" + team.getTeamName().charAt(0) + team.getTeamColor() + " " + player.getName() + ChatColor.RESET));
 
-        this.giveGameItems(player);
+        this.giveGameItems();
 
         if (team.hasSharpenedSwords()) team.applySharpness();
     }
 
-    public void giveGameItems(Player player) {
-        if (this.getTeam() == null) return;
+    public void giveItem(ItemBuilder itemBuilder) {
+        this.getPlayer().getInventory().addItem(itemBuilder.build());
+    }
 
-        player.getInventory().setItem(0, new ItemBuilder(Material.WOOD_SWORD).setUnbreakable(true).build());
+    public void setArmor() {
+        Player player = this.getPlayer();
 
         player.getInventory().setHelmet(new ItemBuilder(Material.LEATHER_HELMET).setUnbreakable(true).setArmorColor(team.getArmorColor()).build());
         player.getInventory().setChestplate(new ItemBuilder(Material.LEATHER_CHESTPLATE).setUnbreakable(true).setArmorColor(team.getArmorColor()).build());
 
+        player.getInventory().setLeggings(new ItemBuilder(Material.LEATHER_LEGGINGS).setUnbreakable(true).setArmorColor(team.getArmorColor()).build());
+        player.getInventory().setBoots(new ItemBuilder(Material.LEATHER_BOOTS).setUnbreakable(true).setArmorColor(team.getArmorColor()).build());
+
+        if (this.hasChainArmorUpgrade()) {
+            player.getInventory().setLeggings(new ItemBuilder(Material.CHAINMAIL_LEGGINGS).setUnbreakable(true).build());
+            player.getInventory().setBoots(new ItemBuilder(Material.CHAINMAIL_BOOTS).setUnbreakable(true).build());
+        }
+
         if (this.hasIronArmorUpgrade()) {
-            if (this.hasDiamondArmorUpgrade()) {
-                player.getInventory().setLeggings(new ItemBuilder(Material.DIAMOND_LEGGINGS).setUnbreakable(true).build());
-                player.getInventory().setBoots(new ItemBuilder(Material.DIAMOND_BOOTS).setUnbreakable(true).build());
-            } else {
-                player.getInventory().setLeggings(new ItemBuilder(Material.IRON_LEGGINGS).setUnbreakable(true).build());
-                player.getInventory().setBoots(new ItemBuilder(Material.IRON_BOOTS).setUnbreakable(true).build());
-            }
+            player.getInventory().setLeggings(new ItemBuilder(Material.IRON_LEGGINGS).setUnbreakable(true).build());
+            player.getInventory().setBoots(new ItemBuilder(Material.IRON_BOOTS).setUnbreakable(true).build());
+        }
+
+        if (this.hasDiamondArmorUpgrade()) {
+            player.getInventory().setLeggings(new ItemBuilder(Material.DIAMOND_LEGGINGS).setUnbreakable(true).build());
+            player.getInventory().setBoots(new ItemBuilder(Material.DIAMOND_BOOTS).setUnbreakable(true).build());
         }
 
         if (team.getReinforcedArmorTier() != ReinforcedArmorTier.NONE) {
             team.applyProtection();
         }
+    }
+
+    public void giveGameItems() {
+        this.getPlayer().getInventory().setItem(0, new ItemBuilder(Material.WOOD_SWORD).setUnbreakable(true).build());
+
+        this.setArmor();
     }
 
     public void setTeam(Team team) {
@@ -169,5 +197,37 @@ public class GamePlayer {
 
     public void setDiamondArmorUpgrade(boolean diamondArmorUpgrade) {
         this.diamondArmorUpgrade = diamondArmorUpgrade;
+    }
+
+    public boolean hasChainArmorUpgrade() {
+        return chainArmorUpgrade;
+    }
+
+    public void setChainArmorUpgrade(boolean chainArmorUpgrade) {
+        this.chainArmorUpgrade = chainArmorUpgrade;
+    }
+
+    public boolean isFinalKilled() {
+        return finalKilled;
+    }
+
+    public void setFinalKilled(boolean finalKilled) {
+        this.finalKilled = finalKilled;
+    }
+
+    public int getKills() {
+        return kills;
+    }
+
+    public void setKills(int kills) {
+        this.kills = kills;
+    }
+
+    public int getDeaths() {
+        return deaths;
+    }
+
+    public void setDeaths(int deaths) {
+        this.deaths = deaths;
     }
 }

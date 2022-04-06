@@ -2,26 +2,27 @@ package xyz.lotho.me.bedwars.managers.game;
 
 import com.sk89q.worldedit.*;
 import com.sk89q.worldedit.data.DataException;
-import org.bukkit.GameMode;
+import org.bukkit.*;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.generators.Generator;
 import xyz.lotho.me.bedwars.managers.block.BlockManager;
 import xyz.lotho.me.bedwars.managers.player.GamePlayer;
 import xyz.lotho.me.bedwars.managers.player.GamePlayerManager;
 import xyz.lotho.me.bedwars.managers.team.PlayerTeam;
+import xyz.lotho.me.bedwars.managers.team.Team;
 import xyz.lotho.me.bedwars.managers.team.TeamManager;
 import xyz.lotho.me.bedwars.managers.world.WorldManager;
-import xyz.lotho.me.bedwars.ui.PickTeamMenu;
+import xyz.lotho.me.bedwars.ui.main.PickTeamMenu;
 import xyz.lotho.me.bedwars.util.Chat;
 import xyz.lotho.me.bedwars.util.ItemBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Game {
 
@@ -40,6 +41,8 @@ public class Game {
     private final WorldManager worldManager;
 
     private final PickTeamMenu pickTeamMenu;
+
+    private int gameTickID;
 
     private boolean started = false;
     private int lobbyTime = 10;
@@ -80,16 +83,18 @@ public class Game {
                 break;
 
             case LOBBY:
-                this.instance.getServer().getScheduler().runTaskTimer(this.instance, this::gameTick, 20, 20);
+                BukkitTask task = this.instance.getServer().getScheduler().runTaskTimer(this.instance, this::gameTick, 20, 20);
+                this.gameTickID = task.getTaskId();
 
-                this.instance.getServer().getOnlinePlayers().forEach(player -> {
+                this.instance.getQueueManager().getQueuedPlayersLimited(16).forEach(uuid -> {
+                    Player player = this.instance.getServer().getPlayer(uuid);
+                    if (player == null) return;
+
                     this.getGamePlayerManager().addPlayer(player.getUniqueId());
-                    GamePlayer gamePlayer = this.getGamePlayerManager().getPlayer(player.getUniqueId());
-                    this.players.add(gamePlayer);
+                    this.players.add(this.getGamePlayerManager().getPlayer(player.getUniqueId()));
                 });
 
                 this.loadLobbyPlayers();
-
                 break;
 
             case PLAYING:
@@ -100,8 +105,69 @@ public class Game {
                 break;
 
             case ENDED:
+                AtomicReference<Team> winningTeam = new AtomicReference<>();
+
+                this.getGamePlayers().forEach(gamePlayer -> {
+                    Player player = gamePlayer.getPlayer();
+                    if (player == null) return;
+
+                    if (gamePlayer.getTeam().getAliveMembers().size() > 0) {
+                        winningTeam.set(gamePlayer.getTeam());
+                    }
+                });
+
+                this.getGamePlayers().forEach(gamePlayer -> {
+                    Player player = gamePlayer.getPlayer();
+                    if (player == null) return;
+
+                    if (gamePlayer.getTeam() == winningTeam.get()) gamePlayer.sendTitle(player, "&aYOU WIN!", "", 100);
+                    else gamePlayer.sendTitle(player, "&cGAME OVER!", "", 100);
+
+                    gamePlayer.getPlayer().playSound(player.getLocation(), Sound.ENDERDRAGON_DEATH, 1, 1);
+
+                    player.sendMessage(Chat.color("\n&c&lGAME OVER!\n" + winningTeam.get().getTeamColor() + winningTeam.get().getTeamName() + " &fhas won the game!"));
+                    player.sendMessage(Chat.color("\n\n&aCongratulations:"));
+
+                    winningTeam.get().getTeamMembers().forEach(winningPlayer -> {
+                        player.sendMessage(Chat.color("&8 - &f" + winningPlayer.getPlayer().getName() + " &7(Kills: &f" + winningPlayer.getKills() + " &7| Deaths: &f" + winningPlayer.getDeaths() + "&7)"));
+                    });
+
+                    player.sendMessage("");
+                });
+
+                this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
+                    this.getGamePlayers().forEach(gamePlayer -> {
+                        gamePlayer.getPlayer().teleport(new Location(this.instance.getMainWorld(), -113, 106, 181));
+                        gamePlayer.getPlayer().setGameMode(GameMode.SURVIVAL);
+                        gamePlayer.getPlayer().getInventory().clear();
+
+                        gamePlayer.getPlayer().getInventory().setHelmet(null);
+                        gamePlayer.getPlayer().getInventory().setChestplate(null);
+                        gamePlayer.getPlayer().getInventory().setLeggings(null);
+                        gamePlayer.getPlayer().getInventory().setBoots(null);
+
+                        gamePlayer.getPlayer().setPlayerListName(gamePlayer.getPlayer().getName());
+                    });
+
+                    this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
+                        this.getWorldManager().resetMap();
+                        this.instance.getServer().getScheduler().cancelTask(this.gameTickID);
+                        this.instance.getGameManager().removeGame(this);
+                    }, 100);
+                }, 100);
+
                 break;
         }
+    }
+
+    public ArrayList<Team> getAliveTeams() {
+        ArrayList<Team> teams = new ArrayList<>();
+
+        this.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
+            if (team.getAliveMembers().size() > 0) teams.add(team);
+        });
+
+        return teams;
     }
 
     public void gameTick() {
@@ -129,9 +195,11 @@ public class Game {
             case PLAYING:
                 this.getGenerators().forEach(Generator::spawnMaterials);
                 this.setElapsedTime(this.getElapsedTime() + 1);
-                break;
 
-            case ENDED:
+                if (this.getAliveTeams().size() == 1) {
+                    this.setGameState(GameState.ENDED);
+                }
+
                 break;
         }
     }
@@ -176,7 +244,7 @@ public class Game {
 
     public void loadTeams() {
         Arrays.stream(PlayerTeam.values()).forEach(team -> {
-            this.getTeamManager().addTeam(team.toString(), team.getTeamColor(), team.getArmorColor());
+            this.getTeamManager().addTeam(team.toString(), team.getTeamColor(), team.getArmorColor(), team.getMetaID());
         });
     }
 

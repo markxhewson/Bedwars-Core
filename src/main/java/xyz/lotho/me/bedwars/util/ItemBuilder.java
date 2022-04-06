@@ -38,6 +38,11 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemBuilder setAmount(int amount) {
+        this.item.setAmount(amount);
+        return this;
+    }
+
     public ItemBuilder setDurability(short id) {
         this.item.setDurability(id);
         return this;

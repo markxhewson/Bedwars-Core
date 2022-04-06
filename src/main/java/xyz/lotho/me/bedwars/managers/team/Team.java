@@ -21,6 +21,7 @@ public class Team {
     private final String teamName;
     private final ChatColor teamColor;
     private final Color armorColor;
+    private final int metaID;
 
     private boolean sharpenedSwords = false;
     private ReinforcedArmorTier reinforcedArmorTier = ReinforcedArmorTier.NONE;
@@ -28,19 +29,30 @@ public class Team {
     private Location spawnLocation;
     private final ArrayList<GamePlayer> teamMembers = new ArrayList<>();
 
-    private final int maxTeamSize = 1;
+    private final int maxTeamSize = 2;
     private boolean bedBroken = false;
 
-    public Team(Bedwars instance, Game game, String teamName, ChatColor teamColor, Color armorColor) {
+    public Team(Bedwars instance, Game game, String teamName, ChatColor teamColor, Color armorColor, int metaID) {
         this.instance = instance;
         this.game = game;
         this.teamName = teamName;
         this.teamColor = teamColor;
         this.armorColor = armorColor;
+        this.metaID = metaID;
     }
 
     public void loadTeam() {
         this.getTeamMembers().forEach(GamePlayer::spawn);
+    }
+
+    public ArrayList<GamePlayer> getAliveMembers() {
+        ArrayList<GamePlayer> aliveMembers = new ArrayList<>();
+
+        this.getTeamMembers().forEach(gamePlayer -> {
+            if (!gamePlayer.isFinalKilled()) aliveMembers.add(gamePlayer);
+        });
+
+        return aliveMembers;
     }
 
     public void breakBed(GamePlayer breaker) {
@@ -50,13 +62,19 @@ public class Team {
         Player bedBreaker = this.instance.getServer().getPlayer(breaker.getUuid());
         Team breakerTeam = this.game.getGamePlayerManager().getPlayerTeam(breaker.getUuid());
 
+        this.game.getWorld().playSound(bedBreaker.getLocation(), Sound.ENDERDRAGON_GROWL, 1, 1);
         this.game.broadcast("\n&f&lBED DESTRUCTION > " + this.getTeamColor() + this.getTeamName() + " Bed &7was incinerated by " + breakerTeam.getTeamColor() + bedBreaker.getName() + "\n ");
+
+        this.getTeamMembers().forEach(gamePlayer -> {
+            gamePlayer.sendTitle(gamePlayer.getPlayer(), "&cBED DESTROYED!", "&fYou will no longer respawn!", 50);
+        });
     }
 
     public void applySharpness() {
         this.teamMembers.forEach(gamePlayer -> {
             for (ItemStack itemStack : gamePlayer.getPlayer().getInventory().getContents()) {
-                if (itemStack != null && itemStack.hasItemMeta() && itemStack.getType().name().contains("SWORD")) {
+
+                if (itemStack != null && itemStack.getType() != Material.AIR && itemStack.hasItemMeta() && itemStack.getType().name().contains("SWORD")) {
                     ItemMeta itemMeta = itemStack.getItemMeta();
                     itemMeta.addEnchant(Enchantment.DAMAGE_ALL, 1, true);
                     itemStack.setItemMeta(itemMeta);
@@ -115,7 +133,7 @@ public class Team {
     }
 
     public void setSpawnLocation(Location spawnLocation) {
-        // this.game.getGameWorld().getBlockAt(spawnLocation).setType(Material.AIR);
+        this.game.getWorld().getBlockAt(spawnLocation).setType(Material.AIR);
         this.spawnLocation = spawnLocation;
     }
 
@@ -149,5 +167,9 @@ public class Team {
 
     public void setReinforcedArmorTier(ReinforcedArmorTier reinforcedArmorTier) {
         this.reinforcedArmorTier = reinforcedArmorTier;
+    }
+
+    public int getMetaID() {
+        return metaID;
     }
 }

@@ -5,12 +5,14 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.lotho.me.bedwars.command.JoinGameCommand;
 import xyz.lotho.me.bedwars.command.KaboomCommand;
 import xyz.lotho.me.bedwars.command.NickCommand;
 import xyz.lotho.me.bedwars.command.StartGameCommand;
 import xyz.lotho.me.bedwars.listeners.*;
 import xyz.lotho.me.bedwars.managers.disguise.DisguiseManager;
 import xyz.lotho.me.bedwars.managers.game.GameManager;
+import xyz.lotho.me.bedwars.queue.QueueManager;
 import xyz.lotho.me.bedwars.util.disguise.HTTPUtility;
 import xyz.lotho.me.bedwars.util.disguise.NMSHelper;
 import xyz.lotho.me.bedwars.util.world.VoidWorldGenerator;
@@ -23,8 +25,10 @@ public final class Bedwars extends JavaPlugin {
     private final NMSHelper nmsHelper = new NMSHelper();
     private final HTTPUtility httpUtility = new HTTPUtility(this);
 
+    private final QueueManager queueManager = new QueueManager(this);
     private final GameManager gameManager = new GameManager(this);
 
+    private World mainWorld;
     private World gameWorld;
     private Location lastGame;
 
@@ -39,6 +43,7 @@ public final class Bedwars extends JavaPlugin {
             worldCreator.createWorld();
         }
 
+        this.setMainWorld(this.getServer().getWorld("world"));
         this.gameWorld = this.getServer().getWorld("games");
         this.lastGame = new Location(this.gameWorld, 0, 150, 0);
 
@@ -54,6 +59,7 @@ public final class Bedwars extends JavaPlugin {
         this.getCommand("kaboom").setExecutor(new KaboomCommand(this));
         this.getCommand("nick").setExecutor(new NickCommand(this));
         this.getCommand("startgame").setExecutor(new StartGameCommand(this));
+        this.getCommand("joingame").setExecutor(new JoinGameCommand(this));
     }
 
     public void initListeners() {
@@ -64,7 +70,8 @@ public final class Bedwars extends JavaPlugin {
                 new BlockPlaceListener(this),
                 new FoodLevelChangeListener(this),
                 new GameDeathListener(this),
-                new AsyncChatListener(this)
+                new AsyncChatListener(this),
+                new ExplodeEventListener(this)
         ).forEach(listener -> this.getServer().getPluginManager().registerEvents(listener, this));
     }
 
@@ -90,5 +97,17 @@ public final class Bedwars extends JavaPlugin {
 
     public GameManager getGameManager() {
         return gameManager;
+    }
+
+    public World getMainWorld() {
+        return mainWorld;
+    }
+
+    public void setMainWorld(World mainWorld) {
+        this.mainWorld = mainWorld;
+    }
+
+    public QueueManager getQueueManager() {
+        return queueManager;
     }
 }

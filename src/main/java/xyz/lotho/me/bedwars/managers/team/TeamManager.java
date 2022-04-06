@@ -23,8 +23,8 @@ public class TeamManager {
         return this.teamsMap;
     }
 
-    public void addTeam(String teamName, ChatColor teamColor, Color armorColor) {
-        this.getTeamsMap().put(teamName, new Team(this.instance, this.game, teamName, teamColor, armorColor));
+    public void addTeam(String teamName, ChatColor teamColor, Color armorColor, int metaID) {
+        this.getTeamsMap().put(teamName, new Team(this.instance, this.game, teamName, teamColor, armorColor, metaID));
     }
 
     public Team getTeam(String name) {

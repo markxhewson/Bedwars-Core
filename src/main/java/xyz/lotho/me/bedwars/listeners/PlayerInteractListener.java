@@ -12,7 +12,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.player.GamePlayer;
-import xyz.lotho.me.bedwars.ui.UpgradeShopMenu;
+import xyz.lotho.me.bedwars.ui.main.ItemShopMenu;
+import xyz.lotho.me.bedwars.ui.main.UpgradeShopMenu;
 import xyz.lotho.me.bedwars.util.Chat;
 
 public class PlayerInteractListener implements Listener {
@@ -25,7 +26,10 @@ public class PlayerInteractListener implements Listener {
 
     @EventHandler
     public void onEntityInteractAtEntity(PlayerInteractAtEntityEvent event) {
-        if (event.getRightClicked().getType() == EntityType.VILLAGER) event.setCancelled(true);
+        if (event.getRightClicked().getType() == EntityType.VILLAGER) {
+            event.setCancelled(true);
+            return;
+        }
     }
 
     @EventHandler
@@ -35,7 +39,7 @@ public class PlayerInteractListener implements Listener {
         event.setCancelled(true);
 
         Player player = event.getPlayer();
-        Game game = this.instance.getGameManager().findPlayerGame(player.getUniqueId());
+        Game game = this.instance.getGameManager().findGameByPlayer(player.getUniqueId());
         if (game == null) return;
 
         GamePlayer gamePlayer = game.getGamePlayerManager().getPlayer(player.getUniqueId());
@@ -45,6 +49,7 @@ public class PlayerInteractListener implements Listener {
 
         if (villager.getProfession() == Villager.Profession.BLACKSMITH) { // item shop
             player.sendMessage(Chat.color("&aYou clicked item shop!"));
+            new ItemShopMenu(this.instance, gamePlayer, game).open(player);
         }
         else if (villager.getProfession() == Villager.Profession.LIBRARIAN) { // upgrades shop
             player.sendMessage(Chat.color("&aYou clicked upgrades shop!"));
@@ -57,7 +62,7 @@ public class PlayerInteractListener implements Listener {
         if (event.getAction() != Action.RIGHT_CLICK_AIR) return;
 
         Player player = event.getPlayer();
-        Game game = this.instance.getGameManager().findPlayerGame(player.getUniqueId());
+        Game game = this.instance.getGameManager().findGameByPlayer(player.getUniqueId());
 
         if (game == null) return;
         if (game.isStarted()) return;

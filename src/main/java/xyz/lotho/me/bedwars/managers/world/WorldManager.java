@@ -82,6 +82,26 @@ public class WorldManager {
         }
     }
 
+    public void resetMap() {
+        int topBlockX = (Math.max(this.game.getCornerOne().getBlockX(), this.game.getCornerTwo().getBlockX()));
+        int bottomBlockX = (Math.min(this.game.getCornerOne().getBlockX(), this.game.getCornerTwo().getBlockX()));
+
+        int topBlockY = (Math.max(this.game.getCornerOne().getBlockY(), this.game.getCornerTwo().getBlockY()));
+        int bottomBlockY = (Math.min(this.game.getCornerOne().getBlockY(), this.game.getCornerTwo().getBlockY()));
+
+        int topBlockZ = (Math.max(this.game.getCornerOne().getBlockZ(), this.game.getCornerTwo().getBlockZ()));
+        int bottomBlockZ = (Math.min(this.game.getCornerOne().getBlockZ(), this.game.getCornerTwo().getBlockZ()));
+
+        for(int x = bottomBlockX; x <= topBlockX; x++) {
+            for (int z = bottomBlockZ; z <= topBlockZ; z++) {
+                for (int y = bottomBlockY; y <= topBlockY; y++) {
+                    Block block = this.game.getWorld().getBlockAt(x, y, z);
+                    if (block.getType() != Material.AIR) block.setType(Material.AIR);
+                }
+            }
+        }
+    }
+
     public void handleMapSetup() {
         int topBlockX = (Math.max(this.game.getCornerOne().getBlockX(), this.game.getCornerTwo().getBlockX()));
         int bottomBlockX = (Math.min(this.game.getCornerOne().getBlockX(), this.game.getCornerTwo().getBlockX()));
@@ -102,22 +122,22 @@ public class WorldManager {
                             if (block.getData() == 3) { // diamond generator, light blue wool
                                 Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.DIAMOND, false);
                                 this.game.getGenerators().add(generator);
-                                // block.setType(Material.AIR);
+                                block.setType(Material.AIR);
                             }
                             else if (block.getData() == 13) { // emerald generator, dark green wool
                                 Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.EMERALD, false);
                                 this.game.getGenerators().add(generator);
-                                // block.setType(Material.AIR);
+                                block.setType(Material.AIR);
                             }
                             else if (block.getData() == 12) { // iron generator, brown wool
                                 Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.IRON, true);
                                 this.game.getGenerators().add(generator);
-                                // block.setType(Material.AIR);
+                                block.setType(Material.AIR);
                             }
                             else if (block.getData() == 1) { // gold generator, orange wool
                                 Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.GOLD, true);
                                 this.game.getGenerators().add(generator);
-                                // block.setType(Material.AIR);
+                                block.setType(Material.AIR);
                             }
                             break;
 

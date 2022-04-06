@@ -20,6 +20,11 @@ public class StartGameCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) return false;
 
+        if (this.instance.getQueueManager().getQueuedPlayers().size() < 2) {
+            sender.sendMessage(Chat.color("&cYou are unable to start a game with less than 2 people in queue."));
+            return false;
+        }
+
         Game game = new Game(this.instance, this.instance.getGameManager().getGames().size() + 1, this.instance.getGameWorld(), this.instance.getLastGame().add(5000, 0, 0));
         this.instance.getGameManager().addGame(game);
 

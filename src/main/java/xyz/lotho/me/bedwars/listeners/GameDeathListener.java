@@ -10,8 +10,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.player.GamePlayer;
-import xyz.lotho.me.bedwars.managers.team.Team;
-import xyz.lotho.me.bedwars.util.Chat;
 
 public class GameDeathListener implements Listener {
 
@@ -26,7 +24,7 @@ public class GameDeathListener implements Listener {
         Player player = event.getPlayer();
 
         if (player.getLocation().getY() <= 60) {
-            Game game = this.instance.getGameManager().findPlayerGame(player.getUniqueId());
+            Game game = this.instance.getGameManager().findGameByPlayer(player.getUniqueId());
             if (game == null) return;
 
             GamePlayer gamePlayer = game.getGamePlayerManager().getPlayer(player.getUniqueId());
@@ -39,10 +37,6 @@ public class GameDeathListener implements Listener {
     @EventHandler
     public void fallDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player)) return;
-
-        if (event.getCause() == EntityDamageEvent.DamageCause.FALL) {
-            event.setCancelled(true);
-        }
     }
 
     @EventHandler
@@ -58,11 +52,19 @@ public class GameDeathListener implements Listener {
         final Player damaged = (Player) event.getEntity();
         final double damage = event.getFinalDamage();
 
+        Game game = this.instance.getGameManager().findGameByPlayer(damaged.getUniqueId());
+        if (game == null) return;
+
+        GamePlayer gamePlayer = game.getGamePlayerManager().getPlayer(damager.getUniqueId());
+        GamePlayer otherGamePlayer = game.getGamePlayerManager().getPlayer(damaged.getUniqueId());
+
+        if (gamePlayer.getTeam().getTeamName().equals(otherGamePlayer.getTeam().getTeamName())) {
+            event.setCancelled(true);
+            return;
+        }
+
         if ((damaged.getHealth() - damage) <= 0) {
             event.setCancelled(true);
-
-            Game game = this.instance.getGameManager().findPlayerGame(damaged.getUniqueId());
-            if (game == null) return;
 
             GamePlayer killed = game.getGamePlayerManager().getPlayer(damaged.getUniqueId());
             GamePlayer killer = game.getGamePlayerManager().getPlayer(damager.getUniqueId());

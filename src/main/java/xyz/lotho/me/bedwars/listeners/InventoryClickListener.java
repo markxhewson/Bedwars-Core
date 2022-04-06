@@ -1,7 +1,6 @@
 package xyz.lotho.me.bedwars.listeners;
 
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -21,7 +20,7 @@ public class InventoryClickListener implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent event) throws Exception {
-        Game game = this.instance.getGameManager().findPlayerGame(event.getWhoClicked().getUniqueId());
+        Game game = this.instance.getGameManager().findGameByPlayer(event.getWhoClicked().getUniqueId());
 
         if (event.getSlotType() == InventoryType.SlotType.ARMOR && game != null) {
             event.setCancelled(true);

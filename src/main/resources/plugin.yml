@@ -16,3 +16,6 @@ commands:
     description: 'Automatically start a game of bedwars.'
     permission: 'bedwars.admin'
     aliases: [begin]
+  joingame:
+    description: 'Join a game queue.'
+    aliases: [join]
