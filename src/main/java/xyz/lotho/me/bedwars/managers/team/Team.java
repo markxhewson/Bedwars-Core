@@ -1,10 +1,14 @@
 package xyz.lotho.me.bedwars.managers.team;
 
 import org.bukkit.*;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.player.GamePlayer;
+import xyz.lotho.me.bedwars.managers.teamupgrades.ReinforcedArmorTier;
 import xyz.lotho.me.bedwars.util.Chat;
 
 import java.util.ArrayList;
@@ -17,6 +21,9 @@ public class Team {
     private final String teamName;
     private final ChatColor teamColor;
     private final Color armorColor;
+
+    private boolean sharpenedSwords = false;
+    private ReinforcedArmorTier reinforcedArmorTier = ReinforcedArmorTier.NONE;
 
     private Location spawnLocation;
     private final ArrayList<GamePlayer> teamMembers = new ArrayList<>();
@@ -43,11 +50,39 @@ public class Team {
         Player bedBreaker = this.instance.getServer().getPlayer(breaker.getUuid());
         Team breakerTeam = this.game.getGamePlayerManager().getPlayerTeam(breaker.getUuid());
 
-        this.game.getGamePlayerManager().getPlayerMap().forEach((uuid, gamePlayer) -> {
-            Player player = this.instance.getServer().getPlayer(gamePlayer.getUuid());
+        this.game.broadcast("\n&f&lBED DESTRUCTION > " + this.getTeamColor() + this.getTeamName() + " Bed &7was incinerated by " + breakerTeam.getTeamColor() + bedBreaker.getName() + "\n ");
+    }
+
+    public void applySharpness() {
+        this.teamMembers.forEach(gamePlayer -> {
+            for (ItemStack itemStack : gamePlayer.getPlayer().getInventory().getContents()) {
+                if (itemStack != null && itemStack.hasItemMeta() && itemStack.getType().name().contains("SWORD")) {
+                    ItemMeta itemMeta = itemStack.getItemMeta();
+                    itemMeta.addEnchant(Enchantment.DAMAGE_ALL, 1, true);
+                    itemStack.setItemMeta(itemMeta);
+                }
+            }
+            gamePlayer.getPlayer().updateInventory();
+        });
+    }
+
+    public void applyProtection() {
+        this.teamMembers.forEach(gamePlayer -> {
+            for (ItemStack itemStack : gamePlayer.getPlayer().getInventory().getArmorContents()) {
+                ItemMeta itemMeta = itemStack.getItemMeta();
+                itemMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, this.getReinforcedArmorTier().getLevel(), true);
+                itemStack.setItemMeta(itemMeta);
+            }
+            gamePlayer.getPlayer().updateInventory();
+        });
+    }
+
+    public void broadcast(String message) {
+        this.getTeamMembers().forEach((gamePlayer) -> {
+            Player player = gamePlayer.getPlayer();
             if (player == null) return;
 
-            player.sendMessage(Chat.color("\n&f&lBED DESTRUCTION > " + this.getTeamColor() + this.getTeamName() + " Bed &7was incinerated by " + breakerTeam.getTeamColor() + bedBreaker.getName()) + "\n ");
+            player.sendMessage(Chat.color(message));
         });
     }
 
@@ -98,5 +133,21 @@ public class Team {
 
     public int getMaxTeamSize() {
         return maxTeamSize;
+    }
+
+    public boolean hasSharpenedSwords() {
+        return sharpenedSwords;
+    }
+
+    public void setSharpenedSwords(boolean sharpenedSwords) {
+        this.sharpenedSwords = sharpenedSwords;
+    }
+
+    public ReinforcedArmorTier getReinforcedArmorTier() {
+        return reinforcedArmorTier;
+    }
+
+    public void setReinforcedArmorTier(ReinforcedArmorTier reinforcedArmorTier) {
+        this.reinforcedArmorTier = reinforcedArmorTier;
     }
 }

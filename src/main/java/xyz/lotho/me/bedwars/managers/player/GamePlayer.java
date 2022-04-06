@@ -1,18 +1,18 @@
 package xyz.lotho.me.bedwars.managers.player;
 
-import net.minecraft.server.v1_8_R3.ChatComponentText;
 import net.minecraft.server.v1_8_R3.IChatBaseComponent;
-import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
 import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.team.Team;
+import xyz.lotho.me.bedwars.managers.teamupgrades.ReinforcedArmorTier;
 import xyz.lotho.me.bedwars.util.Chat;
 import xyz.lotho.me.bedwars.util.ItemBuilder;
 
@@ -43,6 +43,22 @@ public class GamePlayer {
         return this.instance.getServer().getPlayer(this.getUuid());
     }
 
+    public int getItemCount(Material material) {
+        int count = 0;
+
+        for (ItemStack itemStack : this.getPlayer().getInventory().getContents()) {
+            if (itemStack != null && itemStack.getType() != null) {
+                if (itemStack.getType() == material) count += itemStack.getAmount();
+            }
+        }
+
+        return count;
+    }
+
+    public void removeItem(Material material, int count) {
+        this.getPlayer().getInventory().removeItem(new ItemStack(material, count));
+    }
+
     public void sendTitle(Player player, String title, String subtitle) {
         IChatBaseComponent titleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + Chat.color(title) + "\"}");
         IChatBaseComponent subtitleComponent = IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + Chat.color(subtitle) + "\"}");
@@ -68,13 +84,8 @@ public class GamePlayer {
         if (finalKill) {
             this.sendTitle(killed, "&cYOU DIED!", "&eYou will no longer respawn!");
 
-            game.getGamePlayerManager().getPlayerMap().forEach((uuid, gamePlayer) -> {
-                Player player = this.instance.getServer().getPlayer(gamePlayer.getUuid());
-                if (player == null) return;
-
-                if (killer == null) player.sendMessage(Chat.color(team.getTeamColor() + killed.getName() + " &7died." + " &b&lFINAL KILL!"));
-                else player.sendMessage(Chat.color(team.getTeamColor() + killed.getName() + " &7was &6bested &7by " + killer.getTeam().getTeamColor() + killer.getPlayer().getName() + "&7. &b&lFINAL KILL!"));
-            });
+            if (killer == null) this.game.broadcast(team.getTeamColor() + killed.getName() + " &7died." + " &b&lFINAL KILL!");
+            else this.game.broadcast(team.getTeamColor() + killed.getName() + " &7was &6bested &7by " + killer.getTeam().getTeamColor() + killer.getPlayer().getName() + "&7. &b&lFINAL KILL!");
         }
         else {
             new BukkitRunnable() {
@@ -83,24 +94,17 @@ public class GamePlayer {
                 @Override
                 public void run() {
                     if (countdown <= 0) {
-                        killed.setGameMode(GameMode.SURVIVAL);
-                        killed.teleport(team.getSpawnLocation());
-                        GamePlayer.this.giveGameItems(killed);
+                        GamePlayer.this.spawn();
                         this.cancel();
                     } else {
                         GamePlayer.this.sendTitle(killed, "&cYOU DIED!", "&eYou will respawn in &c" + countdown + " &eseconds!");
                         countdown--;
                     }
                 }
-            }.runTaskTimer(this.instance, 20, 20);
+            }.runTaskTimer(this.instance, 0, 20);
 
-            game.getGamePlayerManager().getPlayerMap().forEach((uuid, gamePlayer) -> {
-                Player player = this.instance.getServer().getPlayer(gamePlayer.getUuid());
-                if (player == null) return;
-
-                if (killer == null) player.sendMessage(Chat.color(team.getTeamColor() + killed.getName() + " &7died."));
-                else player.sendMessage(Chat.color(team.getTeamColor() + killed.getName() + " &7was &6bested &7by " + killer.getTeam().getTeamColor() + killer.getPlayer().getName() + "&7."));
-            });
+            if (killer == null) this.game.broadcast(team.getTeamColor() + killed.getName() + " &7died.");
+            else this.game.broadcast(team.getTeamColor() + killed.getName() + " &7was &6bested &7by " + killer.getTeam().getTeamColor() + killer.getPlayer().getName() + "&7.");
         }
     }
 
@@ -116,6 +120,8 @@ public class GamePlayer {
         player.setPlayerListName(Chat.color(team.getTeamColor() + "&l" + team.getTeamName().charAt(0) + team.getTeamColor() + " " + player.getName() + ChatColor.RESET));
 
         this.giveGameItems(player);
+
+        if (team.hasSharpenedSwords()) team.applySharpness();
     }
 
     public void giveGameItems(Player player) {
@@ -134,6 +140,10 @@ public class GamePlayer {
                 player.getInventory().setLeggings(new ItemBuilder(Material.IRON_LEGGINGS).setUnbreakable(true).build());
                 player.getInventory().setBoots(new ItemBuilder(Material.IRON_BOOTS).setUnbreakable(true).build());
             }
+        }
+
+        if (team.getReinforcedArmorTier() != ReinforcedArmorTier.NONE) {
+            team.applyProtection();
         }
     }
 

@@ -42,7 +42,7 @@ public class Game {
     private final PickTeamMenu pickTeamMenu;
 
     private boolean started = false;
-    private int lobbyTime = 20;
+    private int lobbyTime = 10;
     private int elapsedTime = 0;
 
     private final ArrayList<Generator> generators = new ArrayList<>();
@@ -177,6 +177,15 @@ public class Game {
     public void loadTeams() {
         Arrays.stream(PlayerTeam.values()).forEach(team -> {
             this.getTeamManager().addTeam(team.toString(), team.getTeamColor(), team.getArmorColor());
+        });
+    }
+
+    public void broadcast(String message) {
+        this.getGamePlayers().forEach((gamePlayer) -> {
+            Player player = gamePlayer.getPlayer();
+            if (player == null) return;
+
+            player.sendMessage(Chat.color(message));
         });
     }
 
