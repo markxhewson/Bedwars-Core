@@ -26,6 +26,7 @@ import java.util.Arrays;
 public class Game {
 
     private final Bedwars instance;
+    private final int gameID;
     private final World world;
     private final Location lobbyLocation;
 
@@ -47,8 +48,9 @@ public class Game {
     private final ArrayList<Generator> generators = new ArrayList<>();
     private final ArrayList<GamePlayer> players = new ArrayList<>();
 
-    public Game(Bedwars instance, World world, Location center) {
+    public Game(Bedwars instance, int gameID, World world, Location center) {
         this.instance = instance;
+        this.gameID = gameID;
         this.world = world;
         this.lobbyLocation = center;
         this.gamePlayerManager = new GamePlayerManager(this.instance, this);
@@ -92,7 +94,8 @@ public class Game {
 
             case PLAYING:
                 this.setStarted(true);
-                this.teamManager.getTeamsMap().forEach((teamName, team) -> team.loadTeam());
+                this.getGenerators().forEach(generator -> generator.setActive(true));
+                this.getTeamManager().getTeamsMap().forEach((teamName, team) -> team.loadTeam());
 
                 break;
 
@@ -107,11 +110,12 @@ public class Game {
 
         switch (this.getGameState()) {
             case LOBBY:
+                if (lobbyTime <= 0) {
+                    this.setGameState(GameState.PLAYING);
+                    return;
+                }
+
                 this.getGamePlayerManager().getPlayerMap().forEach((uuid, gamePlayer) -> {
-                    if (lobbyTime <= 1) {
-                        this.setGameState(GameState.PLAYING);
-                        return;
-                    }
                     Player player = this.instance.getServer().getPlayer(gamePlayer.getUuid());
 
                     if (lobbyTime == 15 || lobbyTime == 10 || lobbyTime <= 5) {
@@ -155,7 +159,7 @@ public class Game {
 
     public void loadLobbyPlayers() {
         this.getGamePlayers().forEach(gamePlayer -> {
-            Player player = this.instance.getServer().getPlayer(gamePlayer.getUuid());
+            Player player = gamePlayer.getPlayer();
             if (player == null) return;
 
             player.getInventory().clear();
@@ -238,5 +242,9 @@ public class Game {
 
     public WorldManager getWorldManager() {
         return worldManager;
+    }
+
+    public int getGameID() {
+        return gameID;
     }
 }

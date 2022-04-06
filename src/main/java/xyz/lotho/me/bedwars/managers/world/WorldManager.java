@@ -12,13 +12,18 @@ import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.session.ClipboardHolder;
+import net.minecraft.server.v1_8_R3.EntityLiving;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftLivingEntity;
+import org.bukkit.entity.Villager;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.generators.Generator;
 import xyz.lotho.me.bedwars.generators.GeneratorType;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.team.Team;
+import xyz.lotho.me.bedwars.util.Chat;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -150,6 +155,32 @@ public class WorldManager {
                                 team.setSpawnLocation(block.getLocation());
                             }
                             break;
+
+                        case SPONGE:
+                            if (block.getData() == 0) { // upgrades shop
+                                block.setType(Material.AIR);
+                                Villager villager = this.game.getWorld().spawn(block.getLocation().add(0.5, 0, 0.5), Villager.class);
+
+                                villager.setCustomNameVisible(true);
+                                villager.setCustomName(Chat.color("&bUpgrades Shop"));
+                                villager.setCanPickupItems(false);
+                                villager.setProfession(Villager.Profession.LIBRARIAN);
+
+                                EntityLiving handle = ((CraftLivingEntity) villager).getHandle();
+                                handle.getDataWatcher().watch(15, (byte) 0);
+                            }
+                            else if (block.getData() == 1) { // item shop
+                                block.setType(Material.AIR);
+                                Villager villager = this.game.getWorld().spawn(block.getLocation().add(0.5, 0, 0.5), Villager.class);
+
+                                villager.setCustomNameVisible(true);
+                                villager.setCustomName(Chat.color("&aItem Shop"));
+                                villager.setCanPickupItems(false);
+                                villager.setProfession(Villager.Profession.BLACKSMITH);
+
+                                EntityLiving handle = ((CraftLivingEntity) villager).getHandle();
+                                handle.getDataWatcher().watch(15, (byte) 0);
+                            }
                     }
                 }
             }

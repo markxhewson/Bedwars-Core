@@ -22,6 +22,7 @@ public class Generator {
 
     private ArmorStand armorStand;
 
+    private boolean active = false;
     private int secondsSinceActivation = 0;
 
     public Generator(Bedwars instance, Game game, Location spawnLocation, GeneratorType generatorType, boolean isIsland) {
@@ -30,11 +31,17 @@ public class Generator {
         this.spawnLocation = spawnLocation;
         this.generatorType = generatorType;
         this.isIsland = isIsland;
+    }
 
-        if (!isIsland) setActive();
+    public void setActive(boolean active) {
+        this.active = active;
+
+        if (!this.isIsland()) this.loadArmorStands();
     }
 
     public void spawnMaterials() {
+        if (!this.isActive()) return;
+
         if (secondsSinceActivation < this.getSpawnRate()) {
             secondsSinceActivation++;
 
@@ -72,7 +79,7 @@ public class Generator {
         return 1;
     }
 
-    private void setActive() {
+    private void loadArmorStands() {
         armorStand = this.game.getWorld().spawn(this.spawnLocation.add(0.5, 2, 0.5), ArmorStand.class);
         armorStand.setVisible(false);
         armorStand.setCanPickupItems(false);
@@ -112,6 +119,8 @@ public class Generator {
     }
 
     private void updateArmorStand() {
+        if (!this.isActive()) return;
+
         armorStand.setCustomNameVisible(true);
         armorStand.setCustomName(Chat.color(getArmorStandName()));
         armorStand.setHelmet(new ItemBuilder(this.generatorType.getDisplayMaterial()).build());
@@ -119,5 +128,9 @@ public class Generator {
 
     public boolean isIsland() {
         return isIsland;
+    }
+
+    public boolean isActive() {
+        return active;
     }
 }

@@ -26,7 +26,7 @@ public class GamePlayerManager {
     }
 
     public void addPlayer(UUID uuid) {
-        this.getPlayerMap().put(uuid, new GamePlayer(this.instance, this.game, uuid));
+        this.getPlayerMap().put(uuid, new GamePlayer(this.instance, this.game, null, uuid));
     }
 
     public GamePlayer getPlayer(UUID uuid) {

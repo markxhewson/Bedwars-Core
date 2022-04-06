@@ -69,21 +69,25 @@ public class PickTeamMenu extends Menu {
         String selectedTeamName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
         Team selectedTeam = game.getTeamManager().getTeam(selectedTeamName);
 
+        if (selectedTeam == null) {
+            return;
+        }
+
         if (selectedTeam.getTeamMembers().size() >= selectedTeam.getMaxTeamSize()) {
             player.sendMessage(Chat.color("&cThis team is full!"));
             return;
         }
 
-        if (game.getGamePlayerManager().getPlayerTeam(player.getUniqueId()) != null) {
-            GamePlayer gamePlayer = game.getGamePlayerManager().getPlayer(player.getUniqueId());
-            Team currentTeam = game.getGamePlayerManager().getPlayerTeam(player.getUniqueId());
+        GamePlayer gamePlayer = game.getGamePlayerManager().getPlayer(player.getUniqueId());
 
-            currentTeam.removeMember(gamePlayer);
+        if (gamePlayer.getTeam() != null) {
+            gamePlayer.getTeam().removeMember(gamePlayer);
         }
 
-        selectedTeam.addMember(game.getGamePlayerManager().getPlayer(player.getUniqueId()));
-        player.sendMessage(Chat.color("&aYou joined the " + selectedTeam.getTeamColor() + selectedTeam.getTeamName() + " &ateam!"));
+        selectedTeam.addMember(gamePlayer);
+        gamePlayer.setTeam(selectedTeam);
 
+        player.sendMessage(Chat.color("&aYou joined the " + selectedTeam.getTeamColor() + selectedTeam.getTeamName() + " &ateam!"));
         this.game.getPickTeamMenu().open(player);
     }
 }

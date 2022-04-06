@@ -1,6 +1,7 @@
 package xyz.lotho.me.bedwars.listeners;
 
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -29,7 +30,9 @@ public class GameDeathListener implements Listener {
             if (game == null) return;
 
             GamePlayer gamePlayer = game.getGamePlayerManager().getPlayer(player.getUniqueId());
-            gamePlayer.kill();
+
+            if (gamePlayer.getTeam().isBedBroken()) gamePlayer.kill(true, null);
+            else gamePlayer.kill(false, null);
         }
     }
 
@@ -44,6 +47,10 @@ public class GameDeathListener implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Villager) {
+            event.setCancelled(true);
+        }
+
         if (!(event.getDamager() instanceof Player)) return;
         if (!(event.getEntity() instanceof Player)) return;
 
@@ -57,10 +64,11 @@ public class GameDeathListener implements Listener {
             Game game = this.instance.getGameManager().findPlayerGame(damaged.getUniqueId());
             if (game == null) return;
 
-            Team killerTeam = game.getGamePlayerManager().getPlayerTeam(damager.getUniqueId());
+            GamePlayer killed = game.getGamePlayerManager().getPlayer(damaged.getUniqueId());
+            GamePlayer killer = game.getGamePlayerManager().getPlayer(damager.getUniqueId());
 
-            GamePlayer damagedPlayer = game.getGamePlayerManager().getPlayer(damaged.getUniqueId());
-            damagedPlayer.killByPlayer(damager, killerTeam);
+            if (killed.getTeam().isBedBroken()) killed.kill(true, killer);
+            else killed.kill(false, killer);
         }
     }
 }
