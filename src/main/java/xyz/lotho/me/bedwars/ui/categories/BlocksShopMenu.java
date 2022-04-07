@@ -54,7 +54,7 @@ public class BlocksShopMenu extends Menu {
         // category items
         inventory.setItem(19, new ItemBuilder(Material.WOOL).setDisplayName(ironCount < 4 ? "&cWool" : "&aWool").setDurability((short) gamePlayer.getTeam().getMetaID()).setAmount(16).setLore("&7Cost: &f4 Iron").build());
         inventory.setItem(20, new ItemBuilder(Material.HARD_CLAY).setDisplayName(ironCount < 12 ? "&cHardened Clay" : "&aHardened Clay").setAmount(16).setLore("&7Cost: &f12 Iron").build());
-        inventory.setItem(21, new ItemBuilder(Material.STAINED_GLASS).setDisplayName(ironCount < 12 ? "&cBlast-Proof Glass" : "&aBlast-Proof Glass").setAmount(4).setLore("&7Cost: &f12 Iron").build());
+        inventory.setItem(21, new ItemBuilder(Material.STAINED_GLASS).setDisplayName(ironCount < 12 ? "&cBlast-Proof Glass" : "&aBlast-Proof Glass").setDurability((short) gamePlayer.getTeam().getMetaID()).setAmount(4).setLore("&7Cost: &f12 Iron").build());
         inventory.setItem(22, new ItemBuilder(Material.ENDER_STONE).setDisplayName(ironCount < 24 ? "&cEnd Stone" : "&aEnd Stone").setAmount(12).setLore("&7Cost: &f24 Iron").build());
         inventory.setItem(23, new ItemBuilder(Material.LADDER).setDisplayName(ironCount < 4 ? "&cLadder" : "&aLadder").setAmount(16).setLore("&7Cost: &f4 Iron").build());
         inventory.setItem(24, new ItemBuilder(Material.WOOD).setDisplayName(goldCount < 4 ? "&cOak Wood Planks" : "&aOak Wood Planks").setAmount(16).setLore("&7Cost: &64 Gold").build());
@@ -81,14 +81,16 @@ public class BlocksShopMenu extends Menu {
                 gamePlayer.giveItem(new ItemBuilder(Material.WOOL).setDurability((short) gamePlayer.getTeam().getMetaID()).setAmount(16));
                 break;
 
-            case STAINED_GLASS_PANE:
+            case STAINED_GLASS:
+                if (itemStack.getData().getData() != (short) gamePlayer.getTeam().getMetaID()) return;
+
                 if (ironCount < 12) {
                     player.sendMessage(Chat.color("&cYou cannot afford this!"));
                     return;
                 }
 
                 gamePlayer.removeItem(Material.IRON_INGOT, 4);
-                gamePlayer.giveItem(new ItemBuilder(Material.STAINED_GLASS).setAmount(4));
+                gamePlayer.giveItem(new ItemBuilder(Material.STAINED_GLASS).setDurability((short) gamePlayer.getTeam().getMetaID()).setAmount(4));
                 break;
 
             case ENDER_STONE:

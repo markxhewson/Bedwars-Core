@@ -22,12 +22,13 @@ import xyz.lotho.me.bedwars.util.ItemBuilder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Game {
 
     private final Bedwars instance;
-    private final int gameID;
+    private final UUID gameUUID;
     private final World world;
     private final Location lobbyLocation;
 
@@ -51,9 +52,9 @@ public class Game {
     private final ArrayList<Generator> generators = new ArrayList<>();
     private final ArrayList<GamePlayer> players = new ArrayList<>();
 
-    public Game(Bedwars instance, int gameID, World world, Location center) {
+    public Game(Bedwars instance, UUID gameUUID, World world, Location center) {
         this.instance = instance;
-        this.gameID = gameID;
+        this.gameUUID = gameUUID;
         this.world = world;
         this.lobbyLocation = center;
         this.gamePlayerManager = new GamePlayerManager(this.instance, this);
@@ -105,30 +106,21 @@ public class Game {
                 break;
 
             case ENDED:
-                AtomicReference<Team> winningTeam = new AtomicReference<>();
+                Team winningTeam = this.getWinningTeam();
 
                 this.getGamePlayers().forEach(gamePlayer -> {
                     Player player = gamePlayer.getPlayer();
                     if (player == null) return;
 
-                    if (gamePlayer.getTeam().getAliveMembers().size() > 0) {
-                        winningTeam.set(gamePlayer.getTeam());
-                    }
-                });
-
-                this.getGamePlayers().forEach(gamePlayer -> {
-                    Player player = gamePlayer.getPlayer();
-                    if (player == null) return;
-
-                    if (gamePlayer.getTeam() == winningTeam.get()) gamePlayer.sendTitle(player, "&aYOU WIN!", "", 100);
+                    if (gamePlayer.getTeam() == winningTeam) gamePlayer.sendTitle(player, "&aYOU WIN!", "", 100);
                     else gamePlayer.sendTitle(player, "&cGAME OVER!", "", 100);
 
-                    gamePlayer.getPlayer().playSound(player.getLocation(), Sound.ENDERDRAGON_DEATH, 1, 1);
+                    player.playSound(player.getLocation(), Sound.ENDERDRAGON_DEATH, 1, 1);
 
-                    player.sendMessage(Chat.color("\n&c&lGAME OVER!\n" + winningTeam.get().getTeamColor() + winningTeam.get().getTeamName() + " &fhas won the game!"));
+                    player.sendMessage(Chat.color("\n&c&lGAME OVER!\n" + winningTeam.getTeamColor() + winningTeam.getTeamName() + " &fhas won the game!"));
                     player.sendMessage(Chat.color("\n\n&aCongratulations:"));
 
-                    winningTeam.get().getTeamMembers().forEach(winningPlayer -> {
+                    winningTeam.getTeamMembers().forEach(winningPlayer -> {
                         player.sendMessage(Chat.color("&8 - &f" + winningPlayer.getPlayer().getName() + " &7(Kills: &f" + winningPlayer.getKills() + " &7| Deaths: &f" + winningPlayer.getDeaths() + "&7)"));
                     });
 
@@ -137,37 +129,29 @@ public class Game {
 
                 this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
                     this.getGamePlayers().forEach(gamePlayer -> {
-                        gamePlayer.getPlayer().teleport(new Location(this.instance.getMainWorld(), -113, 106, 181));
-                        gamePlayer.getPlayer().setGameMode(GameMode.SURVIVAL);
-                        gamePlayer.getPlayer().getInventory().clear();
+                        Player player = gamePlayer.getPlayer();
+                        if (player == null) return;
 
-                        gamePlayer.getPlayer().getInventory().setHelmet(null);
-                        gamePlayer.getPlayer().getInventory().setChestplate(null);
-                        gamePlayer.getPlayer().getInventory().setLeggings(null);
-                        gamePlayer.getPlayer().getInventory().setBoots(null);
+                        player.teleport(new Location(this.instance.getMainWorld(), -113, 106, 181));
+                        player.setGameMode(GameMode.SURVIVAL);
+                        player.getInventory().clear();
 
-                        gamePlayer.getPlayer().setPlayerListName(gamePlayer.getPlayer().getName());
+                        player.getInventory().setHelmet(null);
+                        player.getInventory().setChestplate(null);
+                        player.getInventory().setLeggings(null);
+                        player.getInventory().setBoots(null);
+
+                        player.setPlayerListName(gamePlayer.getPlayer().getName());
                     });
 
                     this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
                         this.getWorldManager().resetMap();
                         this.instance.getServer().getScheduler().cancelTask(this.gameTickID);
                         this.instance.getGameManager().removeGame(this);
-                    }, 100);
+                    }, 20);
                 }, 100);
-
                 break;
         }
-    }
-
-    public ArrayList<Team> getAliveTeams() {
-        ArrayList<Team> teams = new ArrayList<>();
-
-        this.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
-            if (team.getAliveMembers().size() > 0) teams.add(team);
-        });
-
-        return teams;
     }
 
     public void gameTick() {
@@ -196,7 +180,7 @@ public class Game {
                 this.getGenerators().forEach(Generator::spawnMaterials);
                 this.setElapsedTime(this.getElapsedTime() + 1);
 
-                if (this.getAliveTeams().size() == 1) {
+                if (this.getTeamManager().getAliveTeams().size() == 2) {
                     this.setGameState(GameState.ENDED);
                 }
 
@@ -204,12 +188,19 @@ public class Game {
         }
     }
 
-    public BlockManager getBlockManager() {
-        return this.blockManager;
-    }
+    public Team getWinningTeam() {
+        AtomicReference<Team> winningTeam = new AtomicReference<>();
 
-    public ArrayList<Generator> getGenerators() {
-        return this.generators;
+        this.getGamePlayers().forEach(gamePlayer -> {
+            Player player = gamePlayer.getPlayer();
+            if (player == null) return;
+
+            if (gamePlayer.getTeam().getAliveMembers().size() > 0) {
+                winningTeam.set(gamePlayer.getTeam());
+            }
+        });
+
+        return winningTeam.get();
     }
 
     public void loadGame() throws IOException, DataException, MaxChangedBlocksException {
@@ -255,6 +246,14 @@ public class Game {
 
             player.sendMessage(Chat.color(message));
         });
+    }
+
+    public BlockManager getBlockManager() {
+        return this.blockManager;
+    }
+
+    public ArrayList<Generator> getGenerators() {
+        return this.generators;
     }
 
     public GameState getGameState() {
@@ -314,14 +313,14 @@ public class Game {
     }
 
     public PickTeamMenu getPickTeamMenu() {
-        return pickTeamMenu;
+        return this.pickTeamMenu;
     }
 
     public WorldManager getWorldManager() {
-        return worldManager;
+        return this.worldManager;
     }
 
-    public int getGameID() {
-        return gameID;
+    public UUID getGameUUID() {
+        return gameUUID;
     }
 }

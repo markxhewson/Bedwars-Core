@@ -1,5 +1,6 @@
 package xyz.lotho.me.bedwars.listeners;
 
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -27,6 +28,6 @@ public class ExplodeEventListener implements Listener {
         if (game == null) return;
 
         List<Block> destroyed = event.blockList();
-        destroyed.removeIf(block -> !game.getBlockManager().isBlockPlayerPlaced(block));
+        destroyed.removeIf(block -> !game.getBlockManager().isBlockPlayerPlaced(block) || block.getType() == Material.STAINED_GLASS);
     }
 }

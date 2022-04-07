@@ -45,10 +45,6 @@ public class ItemShopMenu extends Menu {
         inventory.setItem(5, new ItemBuilder(Material.BOW).setDisplayName("&aRanged").setLore("&eClick to view!").build());
         inventory.setItem(6, new ItemBuilder(Material.BREWING_STAND_ITEM).setDisplayName("&aPotions").setLore("&eClick to view!").build());
         inventory.setItem(7, new ItemBuilder(Material.TNT).setDisplayName("&aUtility").setLore("&eClick to view!").build());
-
-        for (int i = 19; i < 26; i++) inventory.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setDisplayName("&cN/A").setDurability((short) 14).build());
-        for (int i = 28; i < 35; i++) inventory.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setDisplayName("&cN/A").setDurability((short) 14).build());
-        for (int i = 37; i < 44; i++) inventory.setItem(i, new ItemBuilder(Material.STAINED_GLASS_PANE).setDisplayName("&cN/A").setDurability((short) 14).build());
     }
 
     @Override
