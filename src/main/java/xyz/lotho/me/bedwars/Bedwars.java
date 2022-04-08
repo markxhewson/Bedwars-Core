@@ -5,13 +5,15 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.java.JavaPlugin;
-import xyz.lotho.me.bedwars.command.JoinGameCommand;
-import xyz.lotho.me.bedwars.command.KaboomCommand;
-import xyz.lotho.me.bedwars.command.NickCommand;
-import xyz.lotho.me.bedwars.command.StartGameCommand;
+import xyz.lotho.me.bedwars.command.fun.KaboomCommand;
+import xyz.lotho.me.bedwars.command.fun.NickCommand;
+import xyz.lotho.me.bedwars.command.game.EndGameCommand;
+import xyz.lotho.me.bedwars.command.game.JoinGameCommand;
+import xyz.lotho.me.bedwars.command.game.StartGameCommand;
 import xyz.lotho.me.bedwars.listeners.*;
 import xyz.lotho.me.bedwars.managers.disguise.DisguiseManager;
 import xyz.lotho.me.bedwars.managers.game.GameManager;
+import xyz.lotho.me.bedwars.managers.map.MapManager;
 import xyz.lotho.me.bedwars.queue.QueueManager;
 import xyz.lotho.me.bedwars.util.disguise.HTTPUtility;
 import xyz.lotho.me.bedwars.util.disguise.NMSHelper;
@@ -25,6 +27,7 @@ public final class Bedwars extends JavaPlugin {
     private final NMSHelper nmsHelper = new NMSHelper();
     private final HTTPUtility httpUtility = new HTTPUtility(this);
 
+    private final MapManager mapManager = new MapManager(this);
     private final QueueManager queueManager = new QueueManager(this);
     private final GameManager gameManager = new GameManager(this);
 
@@ -60,6 +63,7 @@ public final class Bedwars extends JavaPlugin {
         this.getCommand("nick").setExecutor(new NickCommand(this));
         this.getCommand("startgame").setExecutor(new StartGameCommand(this));
         this.getCommand("joingame").setExecutor(new JoinGameCommand(this));
+        this.getCommand("endgame").setExecutor(new EndGameCommand(this));
     }
 
     public void initListeners() {
@@ -109,5 +113,9 @@ public final class Bedwars extends JavaPlugin {
 
     public QueueManager getQueueManager() {
         return queueManager;
+    }
+
+    public MapManager getMapManager() {
+        return mapManager;
     }
 }

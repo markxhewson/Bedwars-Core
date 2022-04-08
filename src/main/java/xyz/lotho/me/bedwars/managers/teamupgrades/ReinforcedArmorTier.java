@@ -30,11 +30,11 @@ public enum ReinforcedArmorTier {
         return this.level;
     }
 
-    public ReinforcedArmorTier getNext(ReinforcedArmorTier reinforcedArmorTier) {
-        if (reinforcedArmorTier == ReinforcedArmorTier.NONE) return ReinforcedArmorTier.I;
-        else if (reinforcedArmorTier == ReinforcedArmorTier.I) return ReinforcedArmorTier.II;
-        else if (reinforcedArmorTier == ReinforcedArmorTier.II) return ReinforcedArmorTier.III;
-        else if (reinforcedArmorTier == ReinforcedArmorTier.III) return ReinforcedArmorTier.IV;
-        else return null;
+    public ReinforcedArmorTier getNext() {
+        if (this == ReinforcedArmorTier.NONE) return ReinforcedArmorTier.I;
+        else if (this == ReinforcedArmorTier.I) return ReinforcedArmorTier.II;
+        else if (this == ReinforcedArmorTier.II) return ReinforcedArmorTier.III;
+        else if (this == ReinforcedArmorTier.III) return ReinforcedArmorTier.IV;
+        else return ReinforcedArmorTier.IV;
     }
 }

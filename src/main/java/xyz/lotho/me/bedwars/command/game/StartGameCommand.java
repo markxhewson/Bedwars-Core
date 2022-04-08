@@ -1,4 +1,4 @@
-package xyz.lotho.me.bedwars.command;
+package xyz.lotho.me.bedwars.command.game;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -6,6 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import xyz.lotho.me.bedwars.Bedwars;
 import xyz.lotho.me.bedwars.managers.game.Game;
+import xyz.lotho.me.bedwars.ui.main.MapSelectMenu;
 import xyz.lotho.me.bedwars.util.Chat;
 
 import java.util.UUID;
@@ -22,15 +23,18 @@ public class StartGameCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) return false;
 
+        Game game = this.instance.getGameManager().findGameByPlayer(((Player) sender).getUniqueId());
+        if (game != null) {
+            sender.sendMessage(Chat.color("&cYou cannot use this command while in-game."));
+            return false;
+        }
+
         if (this.instance.getQueueManager().getQueuedPlayers().size() < 1) {
             sender.sendMessage(Chat.color("&cYou are unable to start a game with less than 2 people in queue."));
             return false;
         }
 
-        Game game = new Game(this.instance, UUID.randomUUID(), this.instance.getGameWorld(), this.instance.getLastGame().add(5000, 0, 0));
-        this.instance.getGameManager().addGame(game);
-
-        sender.sendMessage(Chat.color("&aStarting game.. &8" + game.getGameUUID()));
+        new MapSelectMenu(this.instance).open(((Player) sender).getPlayer());
         return true;
     }
 }

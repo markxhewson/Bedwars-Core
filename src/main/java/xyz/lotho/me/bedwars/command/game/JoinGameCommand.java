@@ -1,4 +1,4 @@
-package xyz.lotho.me.bedwars.command;
+package xyz.lotho.me.bedwars.command.game;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

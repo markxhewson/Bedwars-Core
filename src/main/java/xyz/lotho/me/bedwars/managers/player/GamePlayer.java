@@ -1,5 +1,6 @@
 package xyz.lotho.me.bedwars.managers.player;
 
+import dev.jcsoftware.jscoreboards.JPerPlayerScoreboard;
 import net.minecraft.server.v1_8_R3.IChatBaseComponent;
 import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
 import org.bukkit.ChatColor;
@@ -11,6 +12,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import xyz.lotho.me.bedwars.Bedwars;
+import xyz.lotho.me.bedwars.managers.board.GameBoard;
+import xyz.lotho.me.bedwars.managers.board.LobbyBoard;
 import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.team.Team;
 import xyz.lotho.me.bedwars.managers.teamupgrades.ReinforcedArmorTier;
@@ -25,6 +28,8 @@ public class GamePlayer {
     private final Game game;
     private Team team;
     private final UUID uuid;
+
+    private JPerPlayerScoreboard scoreboard;
 
     private boolean chainArmorUpgrade = false;
     private boolean ironArmorUpgrade = false;
@@ -48,6 +53,14 @@ public class GamePlayer {
 
     public Player getPlayer() {
         return this.instance.getServer().getPlayer(this.getUuid());
+    }
+
+    public void setGameBoard() {
+        new GameBoard(this.instance, game, this);
+    }
+
+    public void setLobbyBoard() {
+        new LobbyBoard(this.instance, game, this);
     }
 
     public int getItemCount(Material material) {
@@ -125,6 +138,8 @@ public class GamePlayer {
         if (this.getTeam() == null) return;
 
         Player player = this.getPlayer();
+
+        this.setGameBoard();
 
         player.getInventory().clear();
         player.teleport(team.getSpawnLocation());
@@ -229,5 +244,13 @@ public class GamePlayer {
 
     public void setDeaths(int deaths) {
         this.deaths = deaths;
+    }
+
+    public JPerPlayerScoreboard getScoreboard() {
+        return scoreboard;
+    }
+
+    public void setScoreboard(JPerPlayerScoreboard scoreboard) {
+        this.scoreboard = scoreboard;
     }
 }

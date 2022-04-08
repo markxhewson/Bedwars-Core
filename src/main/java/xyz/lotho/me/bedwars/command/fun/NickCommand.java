@@ -1,4 +1,4 @@
-package xyz.lotho.me.bedwars.command;
+package xyz.lotho.me.bedwars.command.fun;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

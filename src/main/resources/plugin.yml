@@ -5,6 +5,9 @@ api-version: 1.18
 authors: [ Lotho, markxhewson ]
 description: A bedwars plugin.
 
+depend:
+  - WorldEdit
+
 commands:
   kaboom:
     description: 'Kaboom!'
@@ -19,3 +22,7 @@ commands:
   joingame:
     description: 'Join a game queue.'
     aliases: [join]
+  endgame:
+    description: 'Forcefully end a game.'
+    permission: 'bedwars.admin'
+    aliases: [end]

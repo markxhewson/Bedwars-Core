@@ -65,7 +65,7 @@ public class UpgradeShopMenu extends Menu {
                         "&7Tier 3: Protection III. &b8 Diamonds",
                         "&7Tier 4: Protection IV. &b16 Diamonds",
                         "",
-                        team.getReinforcedArmorTier() == ReinforcedArmorTier.IV ? "&cMax tier achieved!" : (diamondCount < team.getReinforcedArmorTier().getNext(team.getReinforcedArmorTier()).getDiamondsRequired() ? "&cYou don't have enough Diamonds!" : "&aClick to purchase!"))
+                        team.getReinforcedArmorTier() == ReinforcedArmorTier.IV ? "&cMax tier achieved!" : (diamondCount < team.getReinforcedArmorTier().getNext().getDiamondsRequired() ? "&cYou don't have enough Diamonds!" : "&aClick to purchase!"))
                 .build());
 
         this.fillRemainingSlots();
@@ -87,7 +87,7 @@ public class UpgradeShopMenu extends Menu {
                         return;
                     }
                     gamePlayer.removeItem(Material.DIAMOND, 4);
-                    team.broadcast("&6" + player.getName() + " &ahas purchased &6Sharpened Swords&a!");
+                    team.broadcast("&6" + player.getName() + " &ahas purchased &6Sharpened Swords");
                     team.setSharpenedSwords(true);
                     team.applySharpness();
                 }
@@ -102,36 +102,13 @@ public class UpgradeShopMenu extends Menu {
                     return;
                 }
 
-                if (currentTier == ReinforcedArmorTier.NONE) {
-                    if (diamondCount >= ReinforcedArmorTier.I.getDiamondsRequired()) team.setReinforcedArmorTier(ReinforcedArmorTier.I);
-                    else {
-                        player.sendMessage(Chat.color("&cYou do not have enough diamonds for this upgrade!"));
-                        return;
-                    }
-                }
-                else if (currentTier == ReinforcedArmorTier.I) {
-                    if (diamondCount >= ReinforcedArmorTier.II.getDiamondsRequired()) team.setReinforcedArmorTier(ReinforcedArmorTier.II);
-                    else {
-                        player.sendMessage(Chat.color("&cYou do not have enough diamonds for this upgrade!"));
-                        return;
-                    }
-                }
-                else if (currentTier == ReinforcedArmorTier.II) {
-                    if (diamondCount >= ReinforcedArmorTier.III.getDiamondsRequired()) team.setReinforcedArmorTier(ReinforcedArmorTier.III);
-                    else {
-                        player.sendMessage(Chat.color("&cYou do not have enough diamonds for this upgrade!"));
-                        return;
-                    }
-                }
-                else if (currentTier == ReinforcedArmorTier.III) {
-                    if (diamondCount >= ReinforcedArmorTier.IV.getDiamondsRequired()) team.setReinforcedArmorTier(ReinforcedArmorTier.IV);
-                    else {
-                        player.sendMessage(Chat.color("&cYou do not have enough diamonds for this upgrade!"));
-                        return;
-                    }
+                if (diamondCount >= currentTier.getNext().getDiamondsRequired()) team.setReinforcedArmorTier(currentTier.getNext());
+                else {
+                    player.sendMessage(Chat.color("&cYou do not have enough diamonds for this upgrade!"));
+                    return;
                 }
 
-                team.broadcast("&6" + player.getName() + " &ahas purchased &6" + team.getReinforcedArmorTier().getFormattedName() + "&a!");
+                team.broadcast("&6" + player.getName() + " &ahas purchased &6" + team.getReinforcedArmorTier().getFormattedName());
                 gamePlayer.removeItem(Material.DIAMOND, team.getReinforcedArmorTier().getDiamondsRequired());
 
                 team.applyProtection();

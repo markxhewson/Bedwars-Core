@@ -22,6 +22,7 @@ import xyz.lotho.me.bedwars.util.ItemBuilder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -30,6 +31,7 @@ public class Game {
     private final Bedwars instance;
     private final UUID gameUUID;
     private final World world;
+    private final String mapName;
     private final Location lobbyLocation;
 
     private GameState gameState;
@@ -52,11 +54,12 @@ public class Game {
     private final ArrayList<Generator> generators = new ArrayList<>();
     private final ArrayList<GamePlayer> players = new ArrayList<>();
 
-    public Game(Bedwars instance, UUID gameUUID, World world, Location center) {
+    public Game(Bedwars instance, UUID gameUUID, World world, String mapName, Location lobbyLocation) {
         this.instance = instance;
         this.gameUUID = gameUUID;
         this.world = world;
-        this.lobbyLocation = center;
+        this.mapName = mapName;
+        this.lobbyLocation = lobbyLocation;
         this.gamePlayerManager = new GamePlayerManager(this.instance, this);
         this.teamManager = new TeamManager(this.instance, this);
         this.blockManager = new BlockManager(this.instance, this);
@@ -79,7 +82,7 @@ public class Game {
 
                 this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
                     this.setGameState(GameState.LOBBY);
-                }, 60);
+                }, 50);
 
                 break;
 
@@ -100,6 +103,13 @@ public class Game {
 
             case PLAYING:
                 this.setStarted(true);
+
+                this.getTeamManager().getTeamsMap().forEach((teamName, team) -> {
+                    if (!team.isBedBroken() && team.getAliveMembers().size() == 0) {
+                        team.setBedBroken(true);
+                    }
+                });
+
                 this.getGenerators().forEach(generator -> generator.setActive(true));
                 this.getTeamManager().getTeamsMap().forEach((teamName, team) -> team.loadTeam());
 
@@ -127,29 +137,7 @@ public class Game {
                     player.sendMessage("");
                 });
 
-                this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
-                    this.getGamePlayers().forEach(gamePlayer -> {
-                        Player player = gamePlayer.getPlayer();
-                        if (player == null) return;
-
-                        player.teleport(new Location(this.instance.getMainWorld(), -113, 106, 181));
-                        player.setGameMode(GameMode.SURVIVAL);
-                        player.getInventory().clear();
-
-                        player.getInventory().setHelmet(null);
-                        player.getInventory().setChestplate(null);
-                        player.getInventory().setLeggings(null);
-                        player.getInventory().setBoots(null);
-
-                        player.setPlayerListName(gamePlayer.getPlayer().getName());
-                    });
-
-                    this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
-                        this.getWorldManager().resetMap();
-                        this.instance.getServer().getScheduler().cancelTask(this.gameTickID);
-                        this.instance.getGameManager().removeGame(this);
-                    }, 20);
-                }, 100);
+                this.instance.getServer().getScheduler().runTaskLater(this.instance, this::endGame, 60);
                 break;
         }
     }
@@ -180,7 +168,11 @@ public class Game {
                 this.getGenerators().forEach(Generator::spawnMaterials);
                 this.setElapsedTime(this.getElapsedTime() + 1);
 
-                if (this.getTeamManager().getAliveTeams().size() == 2) {
+                for (GamePlayer gamePlayer : this.getGamePlayers()) {
+                    gamePlayer.getScoreboard().updateScoreboard();
+                }
+
+                if (this.getTeamManager().getAliveTeams().size() == 1) {
                     this.setGameState(GameState.ENDED);
                 }
 
@@ -203,8 +195,36 @@ public class Game {
         return winningTeam.get();
     }
 
+    public void endGame() {
+        this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
+            this.getGamePlayers().forEach(gamePlayer -> {
+                Player player = gamePlayer.getPlayer();
+                if (player == null) return;
+
+                gamePlayer.getScoreboard().destroy();
+
+                player.teleport(new Location(this.instance.getMainWorld(), -113, 106, 181));
+                player.setGameMode(GameMode.SURVIVAL);
+                player.getInventory().clear();
+
+                player.getInventory().setHelmet(null);
+                player.getInventory().setChestplate(null);
+                player.getInventory().setLeggings(null);
+                player.getInventory().setBoots(null);
+
+                player.setPlayerListName(gamePlayer.getPlayer().getName());
+            });
+
+            this.instance.getServer().getScheduler().runTaskLater(this.instance, () -> {
+                this.getWorldManager().resetMap();
+                this.instance.getServer().getScheduler().cancelTask(this.gameTickID);
+                this.instance.getGameManager().removeGame(this);
+            }, 20);
+        }, 20);
+    }
+
     public void loadGame() throws IOException, DataException, MaxChangedBlocksException {
-        this.getWorldManager().loadMap();
+        this.getWorldManager().loadMap(this.getMapName());
 
         this.setCornerOne(new Location(this.getLobbyLocation().getWorld(), this.getLobbyLocation().getX() - 100, this.getLobbyLocation().getY() + 25, this.getLobbyLocation().getZ() + 100));
         this.setCornerTwo(new Location(this.getLobbyLocation().getWorld(), this.getLobbyLocation().getX() + 100, this.getLobbyLocation().getY() - 90, this.getLobbyLocation().getZ() - 100));
@@ -220,6 +240,8 @@ public class Game {
         this.getGamePlayers().forEach(gamePlayer -> {
             Player player = gamePlayer.getPlayer();
             if (player == null) return;
+
+            gamePlayer.setLobbyBoard();
 
             player.getInventory().clear();
             player.getInventory().setHelmet(null);
@@ -322,5 +344,9 @@ public class Game {
 
     public UUID getGameUUID() {
         return gameUUID;
+    }
+
+    public String getMapName() {
+        return mapName;
     }
 }
