@@ -84,6 +84,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- WorldEdit Bukkit API -->
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
             <artifactId>worldedit-bukkit</artifactId>
@@ -91,6 +92,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- FAWE legacy API -->
         <dependency>
             <groupId>com.boydti</groupId>
             <artifactId>fawe-api</artifactId>
