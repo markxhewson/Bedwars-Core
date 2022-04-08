@@ -2,10 +2,8 @@ package xyz.lotho.me.bedwars.util.disguise;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import jdk.nashorn.internal.parser.JSONParser;
 import org.bukkit.Bukkit;
 import xyz.lotho.me.bedwars.Bedwars;
 

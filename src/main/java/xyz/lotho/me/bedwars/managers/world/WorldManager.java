@@ -1,17 +1,23 @@
 package xyz.lotho.me.bedwars.managers.world;
 
+import com.boydti.fawe.object.schematic.Schematic;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.transform.AffineTransform;
+import com.sk89q.worldedit.math.transform.Identity;
+import com.sk89q.worldedit.math.transform.Transform;
 import com.sk89q.worldedit.session.ClipboardHolder;
+import com.sk89q.worldedit.world.World;
 import net.minecraft.server.v1_8_R3.EntityLiving;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,6 +31,7 @@ import xyz.lotho.me.bedwars.managers.game.Game;
 import xyz.lotho.me.bedwars.managers.team.Team;
 import xyz.lotho.me.bedwars.util.Chat;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -60,26 +67,14 @@ public class WorldManager {
         return nearestTeam.get();
     }
 
-    public void loadMap() throws IOException {
-        File defaultSchematic = new File(this.instance.getDataFolder().getAbsolutePath() + "/schematics/" + "Speedway" + ".schematic");
+    public void loadMap(String mapName) throws IOException {
+        File defaultSchematic = new File(this.instance.getDataFolder().getAbsolutePath() + "/schematics/" + mapName + ".schematic");
+        pasteSchematic(this.game.getLobbyLocation(), defaultSchematic);
+    }
 
-        ClipboardFormat clipboardFormat = ClipboardFormat.findByFile(defaultSchematic);
-
-        com.sk89q.worldedit.world.World bukkitWorld = new BukkitWorld(this.game.getWorld());
-
-        assert clipboardFormat != null;
-        ClipboardReader reader = clipboardFormat.getReader(new FileInputStream(defaultSchematic));
-        Clipboard clipboard = reader.read(bukkitWorld.getWorldData());
-
-        EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(bukkitWorld, -1);
-        Operation operation = new ClipboardHolder(clipboard, bukkitWorld.getWorldData()).createPaste(editSession, bukkitWorld.getWorldData()).to(new Vector(this.game.getLobbyLocation().getX(), this.game.getLobbyLocation().getY(), this.game.getLobbyLocation().getZ())).ignoreAirBlocks(true).build();
-
-        try {
-            Operations.complete(operation);
-            editSession.flushQueue();
-        } catch (WorldEditException e) {
-            e.printStackTrace();
-        }
+    public void pasteSchematic(Location location, File file) throws IOException {
+        World weWorld = new BukkitWorld(location.getWorld());
+        (new Schematic(ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(file)).read(weWorld.getWorldData()))).paste(weWorld, BukkitUtil.toVector(location), false, true, new Identity());
     }
 
     public void resetMap() {
