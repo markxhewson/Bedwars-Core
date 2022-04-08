@@ -55,14 +55,6 @@
 
     <repositories>
         <repository>
-            <id>fawe-repo</id>
-            <url>https://www.uskyblock.ovh/maven/dependencies/</url>
-        </repository>
-        <repository>
-            <id>worldedit-repo</id>
-            <url>https://maven.enginehub.org/repo/</url>
-        </repository>
-        <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
@@ -74,6 +66,14 @@
             <id>jordanosterberg-repo</id>
             <url>https://nexus-repo.jordanosterberg.com/repository/maven-releases/</url>
         </repository>
+        <repository>
+            <id>fawe-repo</id>
+            <url>https://ci.athion.net/job/FAWE-1.8.8/ws/mvn</url>
+        </repository>
+        <repository>
+            <id>worldedit-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -84,19 +84,24 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- WorldEdit Bukkit API -->
-        <dependency>
-            <groupId>com.sk89q.worldedit</groupId>
-            <artifactId>worldedit-bukkit</artifactId>
-            <version>6.1.4-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- FAWE legacy API -->
         <dependency>
             <groupId>com.boydti</groupId>
             <artifactId>fawe-api</artifactId>
             <version>latest</version>
+        </dependency>
+
+        <!-- WorldEdit Bukkit API -->
+        <dependency>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-core</artifactId>
+            <version>6.1.4-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-bukkit</artifactId>
+            <version>6.1.4-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 

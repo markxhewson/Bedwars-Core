@@ -141,6 +141,9 @@ public class GamePlayer {
 
         this.setGameBoard();
 
+        System.out.println(team);
+        System.out.println(team.getSpawnLocation());
+
         player.getInventory().clear();
         player.teleport(team.getSpawnLocation());
         player.setGameMode(GameMode.SURVIVAL);

@@ -212,6 +212,7 @@ public class Game {
                 player.getInventory().setLeggings(null);
                 player.getInventory().setBoots(null);
 
+                player.getEnderChest().clear();
                 player.setPlayerListName(gamePlayer.getPlayer().getName());
             });
 

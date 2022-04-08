@@ -1,23 +1,15 @@
 package xyz.lotho.me.bedwars.managers.world;
 
-import com.boydti.fawe.object.schematic.Schematic;
+import com.boydti.fawe.FaweAPI;
+import com.boydti.fawe.util.TaskManager;
 import com.google.common.util.concurrent.AtomicDouble;
-import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.WorldEditException;
+import com.sk89q.worldedit.*;
+import com.sk89q.worldedit.blocks.BaseBlock;
+import com.sk89q.worldedit.blocks.BlockID;
 import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldedit.bukkit.BukkitWorld;
-import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.ClipboardFormats;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
-import com.sk89q.worldedit.function.operation.Operation;
-import com.sk89q.worldedit.function.operation.Operations;
-import com.sk89q.worldedit.math.transform.AffineTransform;
-import com.sk89q.worldedit.math.transform.Identity;
-import com.sk89q.worldedit.math.transform.Transform;
-import com.sk89q.worldedit.session.ClipboardHolder;
-import com.sk89q.worldedit.world.World;
+import com.sk89q.worldedit.regions.CuboidRegion;
 import net.minecraft.server.v1_8_R3.EntityLiving;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -67,138 +59,143 @@ public class WorldManager {
         return nearestTeam.get();
     }
 
-    public void loadMap(String mapName) throws IOException {
-        File defaultSchematic = new File(this.instance.getDataFolder().getAbsolutePath() + "/schematics/" + mapName + ".schematic");
-        pasteSchematic(this.game.getLobbyLocation(), defaultSchematic);
+    public void loadMap(String mapName) {
+        File mapSchematic = new File(this.instance.getDataFolder().getAbsolutePath() + "/schematics/" + mapName + ".schematic");
+        pasteSchematic(this.game.getLobbyLocation(), mapSchematic);
     }
 
-    public void pasteSchematic(Location location, File file) throws IOException {
-        World weWorld = new BukkitWorld(location.getWorld());
-        (new Schematic(ClipboardFormat.SCHEMATIC.getReader(new FileInputStream(file)).read(weWorld.getWorldData()))).paste(weWorld, BukkitUtil.toVector(location), false, true, new Identity());
+    public void pasteSchematic(Location location, File file) {
+        long startTime = System.currentTimeMillis();
+
+        ClipboardFormat clipboardFormat = ClipboardFormats.findByFile(file);
+
+        if (clipboardFormat == null) {
+            System.out.println("[ERROR] Schematic file could not be found for map " + file.getName());
+            return;
+        }
+
+        try {
+            EditSession editSession = clipboardFormat.load(file).paste(FaweAPI.getWorld(location.getWorld().getName()), BukkitUtil.toVector(location), false, true, null);
+            editSession.commit();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(System.currentTimeMillis() - startTime + "ms to load map");
     }
 
     public void resetMap() {
-        int topBlockX = (Math.max(this.game.getCornerOne().getBlockX(), this.game.getCornerTwo().getBlockX()));
-        int bottomBlockX = (Math.min(this.game.getCornerOne().getBlockX(), this.game.getCornerTwo().getBlockX()));
+        long startTime = System.currentTimeMillis();
 
-        int topBlockY = (Math.max(this.game.getCornerOne().getBlockY(), this.game.getCornerTwo().getBlockY()));
-        int bottomBlockY = (Math.min(this.game.getCornerOne().getBlockY(), this.game.getCornerTwo().getBlockY()));
+        Vector cornerOne = new Vector(this.game.getCornerOne().getBlockX(), this.game.getCornerOne().getBlockY(), this.game.getCornerOne().getBlockZ());
+        Vector cornerTwo = new Vector(this.game.getCornerTwo().getBlockX(), this.game.getCornerTwo().getBlockY(), this.game.getCornerTwo().getBlockZ());
 
-        int topBlockZ = (Math.max(this.game.getCornerOne().getBlockZ(), this.game.getCornerTwo().getBlockZ()));
-        int bottomBlockZ = (Math.min(this.game.getCornerOne().getBlockZ(), this.game.getCornerTwo().getBlockZ()));
+        CuboidRegion cuboidRegion = new CuboidRegion(cornerOne, cornerTwo);
 
-        for(int x = bottomBlockX; x <= topBlockX; x++) {
-            for (int z = bottomBlockZ; z <= topBlockZ; z++) {
-                for (int y = bottomBlockY; y <= topBlockY; y++) {
-                    Block block = this.game.getWorld().getBlockAt(x, y, z);
-                    if (block.getType() != Material.AIR) block.setType(Material.AIR);
-                }
-            }
-        }
+        EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(FaweAPI.getWorld(this.game.getWorld().getName()), -1);
+        editSession.setBlocks(cuboidRegion, new BaseBlock(BlockID.AIR));
+
+        System.out.println(System.currentTimeMillis() - startTime + "ms to reset map");
     }
 
     public void handleMapSetup() {
-        int topBlockX = (Math.max(this.game.getCornerOne().getBlockX(), this.game.getCornerTwo().getBlockX()));
-        int bottomBlockX = (Math.min(this.game.getCornerOne().getBlockX(), this.game.getCornerTwo().getBlockX()));
+        long startTime = System.currentTimeMillis();
 
-        int topBlockY = (Math.max(this.game.getCornerOne().getBlockY(), this.game.getCornerTwo().getBlockY()));
-        int bottomBlockY = (Math.min(this.game.getCornerOne().getBlockY(), this.game.getCornerTwo().getBlockY()));
+        Vector cornerOne = new Vector(this.game.getCornerOne().getBlockX(), this.game.getCornerOne().getBlockY(), this.game.getCornerOne().getBlockZ());
+        Vector cornerTwo = new Vector(this.game.getCornerTwo().getBlockX(), this.game.getCornerTwo().getBlockY(), this.game.getCornerTwo().getBlockZ());
 
-        int topBlockZ = (Math.max(this.game.getCornerOne().getBlockZ(), this.game.getCornerTwo().getBlockZ()));
-        int bottomBlockZ = (Math.min(this.game.getCornerOne().getBlockZ(), this.game.getCornerTwo().getBlockZ()));
+        CuboidRegion cuboidRegion = new CuboidRegion(cornerOne, cornerTwo);
 
-        for(int x = bottomBlockX; x <= topBlockX; x++) {
-            for(int z = bottomBlockZ; z <= topBlockZ; z++) {
-                for(int y = bottomBlockY; y <= topBlockY; y++) {
-                    Block block = this.game.getWorld().getBlockAt(x, y, z);
+        for (BlockVector blockVector : cuboidRegion) {
+            Block block = this.game.getWorld().getBlockAt(blockVector.getBlockX(), blockVector.getBlockY(), blockVector.getBlockZ());
 
-                    switch (block.getType()) {
-                        case WOOL:
-                            if (block.getData() == 3) { // diamond generator, light blue wool
-                                Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.DIAMOND, false);
-                                this.game.getGenerators().add(generator);
-                                block.setType(Material.AIR);
-                            }
-                            else if (block.getData() == 13) { // emerald generator, dark green wool
-                                Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.EMERALD, false);
-                                this.game.getGenerators().add(generator);
-                                block.setType(Material.AIR);
-                            }
-                            else if (block.getData() == 12) { // iron generator, brown wool
-                                Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.IRON, true);
-                                this.game.getGenerators().add(generator);
-                                block.setType(Material.AIR);
-                            }
-                            else if (block.getData() == 1) { // gold generator, orange wool
-                                Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.GOLD, true);
-                                this.game.getGenerators().add(generator);
-                                block.setType(Material.AIR);
-                            }
-                            break;
-
-                        case STAINED_CLAY:
-                            if (block.getData() == 1) { // red team (orange stained clay)
-                                Team team = this.game.getTeamManager().getTeam("RED");
-                                team.setSpawnLocation(block.getLocation());
-                            }
-                            else if (block.getData() == 7) { // gray team
-                                Team team = this.game.getTeamManager().getTeam("GRAY");
-                                team.setSpawnLocation(block.getLocation());
-                            }
-                            else if (block.getData() == 2) { // pink team
-                                Team team = this.game.getTeamManager().getTeam("PINK");
-                                team.setSpawnLocation(block.getLocation());
-                            }
-                            else if (block.getData() == 0) { // white team
-                                Team team = this.game.getTeamManager().getTeam("WHITE");
-                                team.setSpawnLocation(block.getLocation());
-                            }
-                            else if (block.getData() == 3) { // aqua team
-                                Team team = this.game.getTeamManager().getTeam("AQUA");
-                                team.setSpawnLocation(block.getLocation());
-                            }
-                            else if (block.getData() == 8) { // yellow team (light gray stained clay)
-                                Team team = this.game.getTeamManager().getTeam("YELLOW");
-                                team.setSpawnLocation(block.getLocation());
-                            }
-                            else if (block.getData() == 5) { // green team
-                                Team team = this.game.getTeamManager().getTeam("GREEN");
-                                team.setSpawnLocation(block.getLocation());
-                            }
-                            else if (block.getData() == 11) { // blue team
-                                Team team = this.game.getTeamManager().getTeam("BLUE");
-                                team.setSpawnLocation(block.getLocation());
-                            }
-                            break;
-
-                        case SPONGE:
-                            if (block.getData() == 0) { // upgrades shop
-                                block.setType(Material.AIR);
-                                Villager villager = this.game.getWorld().spawn(block.getLocation().add(0.5, 0, 0.5), Villager.class);
-
-                                villager.setCustomNameVisible(true);
-                                villager.setCustomName(Chat.color("&bUpgrades Shop"));
-                                villager.setCanPickupItems(false);
-                                villager.setProfession(Villager.Profession.LIBRARIAN);
-
-                                EntityLiving handle = ((CraftLivingEntity) villager).getHandle();
-                                handle.getDataWatcher().watch(15, (byte) 0);
-                            }
-                            else if (block.getData() == 1) { // item shop
-                                block.setType(Material.AIR);
-                                Villager villager = this.game.getWorld().spawn(block.getLocation().add(0.5, 0, 0.5), Villager.class);
-
-                                villager.setCustomNameVisible(true);
-                                villager.setCustomName(Chat.color("&aItem Shop"));
-                                villager.setCanPickupItems(false);
-                                villager.setProfession(Villager.Profession.BLACKSMITH);
-
-                                EntityLiving handle = ((CraftLivingEntity) villager).getHandle();
-                                handle.getDataWatcher().watch(15, (byte) 0);
-                            }
+            switch (block.getType()) {
+                case WOOL:
+                    if (block.getData() == 3) { // diamond generator, light blue wool
+                        Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.DIAMOND, false);
+                        this.game.getGenerators().add(generator);
+                        block.setType(Material.AIR);
                     }
-                }
+                    else if (block.getData() == 13) { // emerald generator, dark green wool
+                        Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.EMERALD, false);
+                        this.game.getGenerators().add(generator);
+                        block.setType(Material.AIR);
+                    }
+                    else if (block.getData() == 12) { // iron generator, brown wool
+                        Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.IRON, true);
+                        this.game.getGenerators().add(generator);
+                        block.setType(Material.AIR);
+                    }
+                    else if (block.getData() == 1) { // gold generator, orange wool
+                        Generator generator = new Generator(this.instance, this.game, block.getLocation(), GeneratorType.GOLD, true);
+                        this.game.getGenerators().add(generator);
+                        block.setType(Material.AIR);
+                    }
+                    break;
+
+                case STAINED_CLAY:
+                    if (block.getData() == 1) { // red team (orange stained clay)
+                        Team team = this.game.getTeamManager().getTeam("RED");
+                        team.setSpawnLocation(block.getLocation());
+                    }
+                    else if (block.getData() == 7) { // gray team
+                        Team team = this.game.getTeamManager().getTeam("GRAY");
+                        team.setSpawnLocation(block.getLocation());
+                    }
+                    else if (block.getData() == 2) { // pink team
+                        Team team = this.game.getTeamManager().getTeam("PINK");
+                        team.setSpawnLocation(block.getLocation());
+                    }
+                    else if (block.getData() == 0) { // white team
+                        Team team = this.game.getTeamManager().getTeam("WHITE");
+                        team.setSpawnLocation(block.getLocation());
+                    }
+                    else if (block.getData() == 3) { // aqua team
+                        Team team = this.game.getTeamManager().getTeam("AQUA");
+                        team.setSpawnLocation(block.getLocation());
+                    }
+                    else if (block.getData() == 8) { // yellow team (light gray stained clay)
+                        Team team = this.game.getTeamManager().getTeam("YELLOW");
+                        team.setSpawnLocation(block.getLocation());
+                    }
+                    else if (block.getData() == 5) { // green team
+                        Team team = this.game.getTeamManager().getTeam("GREEN");
+                        team.setSpawnLocation(block.getLocation());
+                    }
+                    else if (block.getData() == 11) { // blue team
+                        Team team = this.game.getTeamManager().getTeam("BLUE");
+                        team.setSpawnLocation(block.getLocation());
+                    }
+                    break;
+
+                case SPONGE:
+                    if (block.getData() == 0) { // upgrades shop
+                        block.setType(Material.AIR);
+                        Villager villager = this.game.getWorld().spawn(block.getLocation().add(0.5, 0, 0.5), Villager.class);
+
+                        villager.setCustomNameVisible(true);
+                        villager.setCustomName(Chat.color("&bUpgrades Shop"));
+                        villager.setCanPickupItems(false);
+                        villager.setProfession(Villager.Profession.LIBRARIAN);
+
+                        EntityLiving handle = ((CraftLivingEntity) villager).getHandle();
+                        handle.getDataWatcher().watch(15, (byte) 0);
+                    }
+                    else if (block.getData() == 1) { // item shop
+                        block.setType(Material.AIR);
+                        Villager villager = this.game.getWorld().spawn(block.getLocation().add(0.5, 0, 0.5), Villager.class);
+
+                        villager.setCustomNameVisible(true);
+                        villager.setCustomName(Chat.color("&aItem Shop"));
+                        villager.setCanPickupItems(false);
+                        villager.setProfession(Villager.Profession.BLACKSMITH);
+
+                        EntityLiving handle = ((CraftLivingEntity) villager).getHandle();
+                        handle.getDataWatcher().watch(15, (byte) 0);
+                    }
             }
         }
+
+        System.out.println(System.currentTimeMillis() - startTime + "ms to setup map");
     }
 }
